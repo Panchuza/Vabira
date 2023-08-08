@@ -14,6 +14,7 @@ $ npm run start
 $ npm run start:dev
 
 ```
+```bash
 ## local.env
 Agregar dentro de la carpeta src\common\envs el archivo local.env con lo siguiente:
 DATABASE_USER=Vabirauser
@@ -26,3 +27,4 @@ DATABASE_PORT=3000
 
 
 NODE_DEBUG=false
+```
