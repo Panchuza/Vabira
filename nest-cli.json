@@ -3,6 +3,21 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "assets": [
+      {
+        "include": "common/envs/*"
+      },
+      {
+        "include": "mail/templates/**/*",
+        "outDir": "./dist/src/"
+      },
+      {
+        "include": "mail/images/**/*",
+        "outDir": "./dist/src/"
+      }
+    ],
+    "plugins": [
+      "@nestjs/swagger"
+    ]
   }
 }
