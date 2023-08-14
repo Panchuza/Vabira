@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinTable, ManyToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinTable, ManyToMany, OneToOne, JoinColumn, BeforeInsert } from 'typeorm';
 import { ClientStatus } from './clientStatus.entity';
 import { Profiles } from './profile.entity';
 import { Client } from './client.entity';
@@ -18,8 +18,8 @@ export class User {
   id: number;
 
   @ApiProperty()
-  @Column({ type: 'varchar', length: 60, nullable: false, name: 'Name' })
-  name: string;
+  @Column({ type: 'varchar', length: 60, nullable: false, name: 'username' })
+  username: string;
 
   @ApiProperty()
   @Column({ type: 'varchar', length: 50, nullable: false, name: 'FirstName' })
@@ -42,27 +42,12 @@ export class User {
   active: boolean;
 
   @ApiProperty()
-  @Column({ type: 'varchar', length: 5, nullable: true, name: 'Language' })
-  language: string;
-
-  @ApiProperty()
   @Column({ type: 'varchar', length: 128, nullable: false, name: 'Password' })
   password: string;
 
-  @Column({ type: 'int', nullable: true, name: 'CompanyId' })
-  companyId: number;
-
   @ApiProperty()
-  @Column({ type: 'int', nullable: true, name: 'FailLoginCount' })
-  failLoginCount: number;
-
-  @ApiProperty()
-  @Column({ type: 'datetime', nullable: false, name: 'CreatedAt' })
+  @Column({ type: 'datetime', nullable: true, name: 'CreatedAt' })
   createdAt: string;
-
-  @ApiProperty()
-  @Column({ type: 'datetime', nullable: true, name: 'FailBlockDate' })
-  failBlockDate: Date;
 
   @ApiProperty()
   @Column({ type: 'datetime', nullable: true, name: 'LastLogin' })
@@ -71,9 +56,6 @@ export class User {
   @ApiProperty()
   @Column({ type: 'int', nullable: true, name: 'SessionOpen' })
   sessionOpen: number;
-
-  @Column({ type: 'varchar', length: 200, nullable: true, name: 'SessionId' })
-  sessionId: string;
 
   @ApiProperty()
   @Column({ type: 'varchar', length: 36, nullable: true, name: 'ActivationKey' })
@@ -90,7 +72,7 @@ export class User {
   @Column({ name: 'Dni', type: 'varchar', length: 15, nullable: true })
   dni: string;
 
-  @Column({ name: 'DateOfBirth', type: 'datetime', nullable: true })
+  @Column({ name: 'DateOfBirth', type: 'date', nullable: true })
   dateOfBirth: string;
 
   @OneToOne(() => ClientStatus, (clientStatus) => clientStatus.statusRegistrationUser)
@@ -120,9 +102,8 @@ export class User {
   @OneToOne(() => SignStatus, (signStatus) => signStatus.statusRegistrationUser)
   signStatus: SignStatus;
 
-  //Se remueven estas relaciones ya que las clases asociadas fueron removidas de proveedores porque no será usadas
-
   @ManyToMany(() => Profiles, (profile) => profile.profileUser, { cascade: true })
   Profiles: Profiles[]
+
 
 }

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,6 +9,9 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggingInterceptor } from './interceptor/logging.interceptor';
 import { Config } from './config/data.source';
 import { HttpModule} from '@nestjs/axios';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
+import { TypeModule } from './type/type.module';
 
 
 
@@ -29,11 +31,14 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
       useFactory: (configService: ConfigService) => Config,
       inject: [ConfigService],
     }),
+    AuthModule,
+    TypeModule,
     UsersModule,
     HttpModule.register({
       timeout: 50000,
       maxRedirects: 5,
     }),
+    TypeModule,
   ],
   controllers: [AppController],
   providers: [AppService,
