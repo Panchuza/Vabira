@@ -24,6 +24,6 @@ export class TypeConfig {
   @Column({type: 'bit', nullable: false, name:'hasUniqueCode'})
   hasUniqueCode: boolean;
 
-  @OneToOne(() => Type, (type) => type.typeConfig)
+  @OneToMany(() => Type, (type) => type.typeConfig)
   type: Type
 }

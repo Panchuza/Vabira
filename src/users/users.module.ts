@@ -6,15 +6,22 @@ import { User } from 'src/entities/user.entity';
 import { Profiles } from 'src/entities/profile.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
 import { HttpModule } from '@nestjs/axios';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { TypeRole } from 'src/entities/typeRole.entity';
 
+// users.module.ts
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Profiles, ProfileUser]),
-  HttpModule.register({
-    timeout: 50000,
-    maxRedirects: 5,
-  })],
+  imports: [
+    TypeOrmModule.forFeature([User, Profiles, ProfileUser, TypeRole]),
+    HttpModule.register({
+      timeout: 50000,
+      maxRedirects: 5,
+    }),
+  ],
   controllers: [UsersController],
-  providers: [UsersService],
-  exports: [UsersService]
+  providers: [UsersService, JwtService],
+  exports: [UsersService], 
 })
 export class UsersModule {}
+
+

@@ -6,6 +6,7 @@ import { Report } from "./report.entity";
 import { TurnAttentionDay } from "./turnAttentionDay.entity";
 import { Schedule } from "./schedule.entity";
 import { TurnStatus } from "./turnStatus.entity";
+import { Type } from "./type.entity";
 
 @Entity('Turn')
 export class Turn {
@@ -43,5 +44,8 @@ export class Turn {
     @JoinColumn({ name: 'TurnAttentionDay_Id' })
     turnAttentionDay: TurnAttentionDay
 
+    @OneToOne(() => Type)
+    @JoinColumn({ name: 'ClassDay_Type_Id' })
+    classDayType: Type;
 
 }

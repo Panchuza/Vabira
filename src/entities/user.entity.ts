@@ -11,6 +11,8 @@ import { SignStatus } from './signStatus.entity';
 import { Sign } from './sign.entity';
 import { TurnStatus } from './turnStatus.entity';
 import { ProfileUser } from './profileUser.entity';
+import { Role } from 'src/common/enums/rol.enum';
+import { TypeRole } from './typeRole.entity';
 
 @Entity({ name: "Users" })
 export class User {
@@ -18,7 +20,7 @@ export class User {
   id: number;
 
   @ApiProperty()
-  @Column({ type: 'varchar', length: 60, nullable: false, name: 'username' })
+  @Column({ type: 'varchar', length: 60, nullable: false, name: 'Username' })
   username: string;
 
   @ApiProperty()
@@ -32,6 +34,12 @@ export class User {
   @ApiProperty()
   @Column({ type: 'varchar', length: 256, nullable: false, name: 'Email' })
   email: string;
+
+
+  @ApiProperty()
+  @OneToOne(type => TypeRole, {cascade: true, eager: true})
+  @JoinColumn({name: 'Cod_type_role'})
+  typeRole: TypeRole;
 
   @ApiProperty()
   @Column({ type: 'varchar', length: 500, nullable: true, name: 'Avatar' })

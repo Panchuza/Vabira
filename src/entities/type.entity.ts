@@ -12,7 +12,7 @@ export class Type {
   @Column({ type: 'varchar', length: 50, nullable: false, name: 'Code' })
   code: string;
   
-  @OneToOne(() => TypeConfig, (typeConfig) => typeConfig.type)
+  @ManyToOne(() => TypeConfig, (typeConfig) => typeConfig.type)
   @JoinColumn({ name: 'TypeConfig_Id' })
   typeConfig: TypeConfig;
   

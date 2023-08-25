@@ -8,6 +8,7 @@ import { Turn } from "./turn.entity";
 import { User } from "./user.entity";
 import { ScheduleDay } from "./scheduleDay.entity";
 import { Turnero } from "./turnero.entity";
+import { IsObject } from "class-validator";
 
 @Entity('Schedule')
 export class Schedule {
@@ -33,7 +34,11 @@ export class Schedule {
     client: Client;
 
     @OneToOne(() => Turnero, (turnero) => turnero.schedule)
-	turnero: Turnero;
+    turnero: Turnero;
+
+    @OneToOne(() => Type)
+    @JoinColumn({ name: 'ClassDay_Type_Id' })
+    classDayType: Type;
 
     @OneToOne(() => ScheduleDay, (scheduleDay) => scheduleDay.schedule)
     @JoinColumn({ name: 'ScheduleDay_Id' })

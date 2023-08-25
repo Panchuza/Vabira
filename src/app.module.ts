@@ -12,6 +12,7 @@ import { HttpModule} from '@nestjs/axios';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeModule } from './type/type.module';
+import { TurnModule } from './turn/turn.module';
 
 
 
@@ -38,7 +39,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
       timeout: 50000,
       maxRedirects: 5,
     }),
-    TypeModule,
+    TurnModule,
   ],
   controllers: [AppController],
   providers: [AppService,
