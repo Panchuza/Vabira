@@ -5,6 +5,6 @@ import { IsOptional } from 'class-validator';
 export class UpdateUserDto extends PartialType(CreateUserDto) {
 
     @IsOptional()
-    id: number
+    id?: number
 
 }

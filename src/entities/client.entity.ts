@@ -1,5 +1,5 @@
 import { ClientStatus } from 'src/entities/clientStatus.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, TableForeignKey, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
 import { Turn } from './turn.entity';
 import { PurchaseRecord } from './purchaseRecord.entity';

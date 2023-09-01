@@ -1,45 +1,71 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { Request } from 'express';
-import { ActiveUser } from 'src/common/decorators/active-user.decorator';
-import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
-// import { Role } from '../common/enums/rol.enum';
-import { AuthService } from './auth.service';
-import { Auth } from './decorators/auth.decorator';
+import { Body, Controller, Get, Post, UseGuards, Req, Headers, } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import { Role } from 'src/common/enums/rol.enum';
-
-interface RequestWithUser extends Request {
-  user: {
-    email: string;
-    // role: string;
-  };
-}
+import { UsersService } from 'src/users/users.service';
+import { UserRoleGuard } from './guard/user-role.guard';
+import { ValidRoles } from './interfaces';
+import { RawHeaders, GetUser, Auth } from './decorators';
+import { RoleProtected } from './decorators/role-protected.decorator';
+import { User } from 'src/entities/user.entity';
+import { AuthGuard } from '@nestjs/passport';
+import { IncomingHttpHeaders } from 'http';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
-
-  // @Post('register')
-  // register(
-  //   @Body()
-  //   registerDto: RegisterDto,
-  // ) {
-  //   return this.authService.(registerDto);
-  // }
+  constructor(
+    private readonly userService: UsersService,
+  ) { }
 
   @Post('login')
-  login(
-    @Body()
-    loginDto: LoginDto,
-  ) {
-    return this.authService.login(loginDto);
+  loginUser(@Body() loginUserDto: LoginDto) {
+    return this.userService.login(loginUserDto);
   }
 
-  @Get('profile')
-  @Auth(Role.USER)
-  profile(@ActiveUser() user: UserActiveInterface) {
-    console.log(user)
-    return this.authService.profile(user);
+  @Get('check-status')
+  @Auth()
+  checkAuthStatus(
+    @GetUser() user: User
+  ) {
+    return this.userService.checkAuthStatus(user);
+  }
+
+  @Get('private')
+  @UseGuards(AuthGuard())
+  testingPrivateRoute(
+    @Req() request: Express.Request,
+    @GetUser() user: User,
+    @GetUser('email') userEmail: string,
+    @RawHeaders() rawHeaders: string[],
+    @Headers() headers: IncomingHttpHeaders,
+  ) {
+    return {
+      ok: true,
+      message: 'Hola Mundo Private',
+      user,
+      userEmail,
+      rawHeaders,
+      headers
+    }
+  }
+
+
+  @Get('private2')
+  @RoleProtected(ValidRoles.supplier, ValidRoles.admin)
+  @UseGuards(AuthGuard(), UserRoleGuard) 
+  privateRoute2(@GetUser() user: User) 
+  {
+    return {
+      ok: true,
+      user
+    }
+  }
+
+
+  @Get('private3')
+  @Auth(ValidRoles.admin)
+  privateRoute3(@GetUser() user: User) {
+    return {
+      ok: true,
+      user
+    }
   }
 }

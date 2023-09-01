@@ -6,13 +6,13 @@ import { User } from 'src/entities/user.entity';
 import { Profiles } from 'src/entities/profile.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
 import { HttpModule } from '@nestjs/axios';
-import { JwtModule, JwtService } from '@nestjs/jwt';
-import { TypeRole } from 'src/entities/typeRole.entity';
-
+import { JwtService } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 // users.module.ts
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Profiles, ProfileUser, TypeRole]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+    TypeOrmModule.forFeature([User, Profiles, ProfileUser]),
     HttpModule.register({
       timeout: 50000,
       maxRedirects: 5,

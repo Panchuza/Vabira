@@ -1,12 +1,14 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { hashSync } from 'bcrypt'
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 import { DbException } from 'src/exception/dbException';
-import { TypeRole } from 'src/entities/typeRole.entity';
+import { JwtService } from '@nestjs/jwt';
+import { LoginDto } from 'src/auth/dto/login.dto';
+import { JwtPayload } from 'src/auth/interfaces';
 
 @Injectable()
 export class UsersService {
@@ -15,43 +17,44 @@ export class UsersService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @InjectRepository(TypeRole)
-    private typeRoleRepository: Repository<TypeRole>,
+    private jwtService: JwtService,
     @InjectEntityManager()
     private entityManager: EntityManager,
 
   ) { }
 
   async create(createUserDto: CreateUserDto) {
-    let userDto = new User;
-    let typeRole = await this.typeRoleRepository.findOne({where: {codTypeRole: 1}})
-    const { username, email, dni, dateOfBirth, ...toCreate } = createUserDto;
+
+    const { username, email, dni, dateOfBirth, password, ...toCreate } = createUserDto;
+    
+    let roles:any = ['user']
 
     try {
       const isValid = await this.validation(username, email, dni);
-
       if (!isValid) {
-        userDto.dni = dni;
-        userDto.password = await hashSync(toCreate.password, 8);
-        userDto.username = username;
-        userDto.email = email;
-        userDto.firstName = toCreate.firstName;
-        userDto.lastName = toCreate.lastName;
+        const userDto = this.userRepository.create({
+          ...toCreate,
+          password: bcrypt.hashSync( password, 10 )
+        });
+        
+        userDto.username = username
+        userDto.email = email
+        userDto.dni = dni
         userDto.dateOfBirth = this.newFormatDate(dateOfBirth);
         userDto.createdAt = this.formatDate(new Date());
         userDto.active = true;
-        userDto.typeRole = typeRole;
+        userDto.roles = roles.toString();
 
         let userResult: any;
         await this.entityManager.transaction(async (transaction) => {
           try {
             userResult = await transaction.save(userDto);
+            delete userResult.password;
           } catch (error) {
             console.log(error);
             throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         });
-
         return userResult;
       } else {
         return new HttpException(
@@ -66,6 +69,44 @@ export class UsersService {
       console.log(error);
       throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async login( loginUserDto: LoginDto ) {
+
+    const { password, email } = loginUserDto;
+
+    const user = await this.userRepository.findOne({
+      where: { email },
+      select: { email: true, password: true, id: true } //! OJO!
+    });
+
+    if ( !user ) 
+      throw new UnauthorizedException('Credentials are not valid (email)');
+      
+    if ( !bcrypt.compareSync( password, user.password ) )
+      throw new UnauthorizedException('Credentials are not valid (password)');
+
+    return {
+      ...user,
+      token: this.getJwtToken({ id: user.id })
+    };
+  }
+
+  private getJwtToken( payload: JwtPayload ) {
+
+    const token = this.jwtService.sign( payload );
+    
+    return token;
+
+  }
+
+  async checkAuthStatus( user: User ){
+
+    return {
+      ...user,
+      token: this.getJwtToken({ id: user.id })
+    };
+
   }
 
   async validation(username, email, dni) {
@@ -129,9 +170,8 @@ export class UsersService {
 
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    // Que se deberia actualizar?
-    return `This action updates a #${id} user`;
+  async update(updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOne({where: {id: updateUserDto.id, active: true}})
   }
 
   async remove(updateUserDto: UpdateUserDto) {

@@ -28,7 +28,6 @@ import { TurnStatus } from "src/entities/turnStatus.entity";
 import { Type } from "src/entities/type.entity";
 import { TypeConfig } from "src/entities/typeConfig.entity";
 import { User } from "src/entities/user.entity";
-import { TypeRole } from "src/entities/typeRole.entity";
 
 const dest = "dist/common/envs/";
 const env: string | undefined = process.env.NODE_ENV;
@@ -49,7 +48,7 @@ export const Config: DataSourceOptions = {
   database: process.env.DATABASE_NAME,
   entities: [Accesses, AccessProfile, Alert, Client, ClientStatus, Faq, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Report
     , SaleRecord, Schedule, ScheduleDay, Sign, SignStatus, Supplier, SupplierStatus, Turn, TurnAttentionDay, Turnero
-  , TurnStatus, Type, TypeConfig, TypeRole, User],
+  , TurnStatus, Type, TypeConfig, User],
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   migrationsRun: false,
   synchronize: false,

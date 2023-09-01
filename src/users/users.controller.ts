@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Query, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { AuthGuard } from 'src/auth/guard/auth.guard';
+import { Auth, RoleProtected } from 'src/auth/decorators';
+import { ValidRoles } from 'src/auth/interfaces';
 
 @Controller('users')
 export class UsersController {
@@ -19,14 +20,15 @@ export class UsersController {
   }
 
   @Get('/findOne')
-  @UseGuards(AuthGuard)
+  @Auth()
+  @RoleProtected(ValidRoles.user)
   findOne(@Query('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
   @Patch('/update')
-  update(@Query('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(@Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(updateUserDto);
   }
 
   @Patch('/delete')

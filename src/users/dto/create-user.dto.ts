@@ -20,6 +20,8 @@ export class CreateUserDto {
     @IsNotEmpty()
     password: string;
 
+    roles: string[]
+
     // @IsDateString()
     @IsOptional()
     dateOfBirth: string;
