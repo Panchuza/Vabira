@@ -1,12 +1,12 @@
 import { Type } from "./type.entity";
-import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne, OneToMany, BeforeUpdate } from "typeorm"
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, BeforeUpdate } from "typeorm"
 import { User } from "./user.entity";
-import { IsArray, IsNotEmpty, IsOptional } from "class-validator";
 import { SupplierStatus } from "./supplierStatus.entity";
 import { PurchaseRecord } from "./purchaseRecord.entity";
 import { SaleRecord } from "./saleRecord.entity";
 import { Turn } from "./turn.entity";
 import { Turnero } from "./turnero.entity";
+import { Schedule } from "./schedule.entity";
 
 @Entity('Supplier')
 export class Supplier {
@@ -37,7 +37,7 @@ export class Supplier {
 	@OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.supplier)
 	purchaseRecord: PurchaseRecord;
 
-	@OneToOne(() => SaleRecord, (saleRecord) => saleRecord.client)
+	@OneToOne(() => SaleRecord, (saleRecord) => saleRecord.supplier)
 	saleRecord: SaleRecord;
 
 	@OneToOne(() => Turn, (turn) => turn.supplier)
@@ -45,6 +45,9 @@ export class Supplier {
 
 	@OneToOne(() => Turnero, (turnero) => turnero.supplier)
 	turnero: Turnero;
+
+	@OneToOne(() => Schedule, (schedule) => schedule.supplier)
+	schedule: Schedule
 
 	@OneToMany(() => SupplierStatus, (supplierStatus) => supplierStatus.supplier, { cascade: true, eager: true })
 	supplierStatus: SupplierStatus[];

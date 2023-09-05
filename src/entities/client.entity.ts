@@ -27,9 +27,6 @@ export class Client {
   @OneToOne(() => Turn, (turn) => turn.client)
   turn: Turn
 
-  @OneToOne(() => Schedule, (schedule) => schedule.client)
-  schedule: Schedule
-
   @OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.client)
   purchaseRecord: PurchaseRecord;
 

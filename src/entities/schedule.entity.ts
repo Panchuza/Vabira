@@ -1,19 +1,16 @@
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
-import { Product } from "./product.entity";
 import { Supplier } from "./supplier.entity";
-import { Client } from "./client.entity";
-import { Receipt } from "./receipt.entity";
 import { Turn } from "./turn.entity";
-import { User } from "./user.entity";
-import { ScheduleDay } from "./scheduleDay.entity";
 import { Turnero } from "./turnero.entity";
-import { IsObject } from "class-validator";
 
 @Entity('Schedule')
 export class Schedule {
     @PrimaryGeneratedColumn('increment', { name: 'Id' })
     id: number
+
+    @Column({ name: 'Name', type: 'varchar', nullable: true })
+    name: string;
 
     @Column({ name: 'InitialTurnDateTime', type: 'datetime', nullable: true })
     initialTurnDateTime: string;
@@ -21,17 +18,19 @@ export class Schedule {
     @Column({ name: 'FinalTurnDateTime', type: 'datetime', nullable: true })
     finalTurnDateTime: string;
 
-    @OneToOne(() => Product, (product) => product.schedule)
-    @JoinColumn({ name: 'Product_Id' })
-    product: Product;
+    @Column({ name: 'TurnDuration', type: 'datetime', nullable: false })
+    turnDuration: string;
+
+    @Column({ name: 'HasSign', type: 'bit', nullable: false })
+    hasSign: boolean;
 
     @OneToOne(() => Turn, (turn) => turn.schedule)
     @JoinColumn({ name: 'Turn_Id' })
     turn: Turn
 
-    @OneToOne(() => Client, (client) => client.schedule)
-    @JoinColumn({ name: 'Client_Id' })
-    client: Client;
+    @OneToOne(() => Supplier, (supplier) => supplier.schedule)
+    @JoinColumn({ name: 'Supplier_Id' })
+    supplier: Supplier;
 
     @OneToOne(() => Turnero, (turnero) => turnero.schedule)
     turnero: Turnero;
@@ -40,7 +39,4 @@ export class Schedule {
     @JoinColumn({ name: 'ClassDay_Type_Id' })
     classDayType: Type;
 
-    @OneToOne(() => ScheduleDay, (scheduleDay) => scheduleDay.schedule)
-    @JoinColumn({ name: 'ScheduleDay_Id' })
-    scheduleDay: ScheduleDay;
 }

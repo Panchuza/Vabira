@@ -13,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeModule } from './type/type.module';
 import { TurnModule } from './turn/turn.module';
+import { ScheduleModule } from './schedule/schedule.module';
 
 
 
@@ -40,6 +41,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
       maxRedirects: 5,
     }),
     TurnModule,
+    ScheduleModule,
   ],
   controllers: [AppController],
   providers: [AppService,
