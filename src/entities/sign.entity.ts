@@ -18,10 +18,6 @@ export class Sign {
     @Column({ name: 'FinalAmount', type: 'decimal', precision: 8, scale: 2, nullable: true })
     finalAmount: number
 
-    @OneToOne(() => Product, (product) => product.schedule)
-    @JoinColumn({ name: 'Product_Id' })
-    product: Product;
-
     @OneToOne(() => Turn, (turn) => turn.schedule)
     @JoinColumn({ name: 'Turn_Id' })
     turn: Turn

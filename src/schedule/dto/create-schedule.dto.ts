@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsOptional } from "class-validator";
 import { Supplier } from "src/entities/supplier.entity";
+import { Turnero } from "src/entities/turnero.entity";
 import { Type } from "src/entities/type.entity";
 
 export class CreateScheduleDto {
@@ -8,7 +9,7 @@ export class CreateScheduleDto {
     name: string;
 
     @IsNotEmpty()
-    turnDuration: string;
+    turnDuration: number;
 
     @IsNotEmpty()
     initialTurnDateTime: string;
@@ -22,7 +23,7 @@ export class CreateScheduleDto {
     classDayType: Type
 
     @IsOptional()
-    turnero: string;
+    turnero: Turnero;
 
     @IsOptional()
     supplier: Supplier;

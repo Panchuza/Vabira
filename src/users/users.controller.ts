@@ -20,8 +20,8 @@ export class UsersController {
   }
 
   @Get('/findOne')
-  @Auth()
-  @RoleProtected(ValidRoles.user)
+  // @Auth()
+  // @RoleProtected(ValidRoles.user)
   findOne(@Query('id') id: string) {
     return this.usersService.findOne(+id);
   }

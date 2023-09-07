@@ -19,7 +19,7 @@ export class Schedule {
     finalTurnDateTime: string;
 
     @Column({ name: 'TurnDuration', type: 'datetime', nullable: false })
-    turnDuration: string;
+    turnDuration: number;
 
     @Column({ name: 'HasSign', type: 'bit', nullable: false })
     hasSign: boolean;

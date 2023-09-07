@@ -15,6 +15,7 @@ async function bootstrap() {
       logger: console,
     }
   );
+  app.enableCors();
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalInterceptors(new ErrorsInterceptor());

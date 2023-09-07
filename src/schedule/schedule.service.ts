@@ -4,6 +4,7 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Schedule } from 'src/entities/schedule.entity';
 import { EntityManager, Repository } from 'typeorm';
+import { Turn } from 'src/entities/turn.entity';
 
 @Injectable()
 export class ScheduleService {
@@ -18,35 +19,37 @@ export class ScheduleService {
   ) { }
 
   async create(createScheduleDto: CreateScheduleDto) {
-    const newSchedule = new Schedule();
-    newSchedule.name = createScheduleDto.name;
-    newSchedule.hasSign = createScheduleDto.hasSign;
-    newSchedule.classDayType = createScheduleDto.classDayType;
-    newSchedule.turnero = createScheduleDto.turnero;
-    newSchedule.supplier = createScheduleDto.supplier;
-  
-    // Guarda la agenda en la base de datos
-    const savedSchedule = await getRepository(Schedule).save(newSchedule);
-  
+
+    const { initialTurnDateTime, finalTurnDateTime, turnDuration, ...toCreate } = createScheduleDto;
+    const scheduleDto = await this.scheduleRepository.create({
+      ...toCreate
+    })
+
+    scheduleDto.initialTurnDateTime = createScheduleDto.initialTurnDateTime
+    scheduleDto.finalTurnDateTime = createScheduleDto.finalTurnDateTime
+    scheduleDto.turnDuration = createScheduleDto.turnDuration
+
+    
     // Define los días laborables de la semana (Lunes a Viernes)
-    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    const weekdays = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'];
   
-    // Define los horarios de inicio y fin
-    const startTime = '08:00';
-    const endTime = '20:00';
+    // // Define los horarios de inicio y fin
+    // const startTime = '08:00';
+    // const endTime = '20:00';
   
-    // Divide el tiempo en intervalos de 1 hora
-    const interval = 60; // minutos
+    // // Divide el tiempo en intervalos de 1 hora
+    // const interval = 60; // minutos
   
     // Crea los turnos para cada día laborable y horario
     for (const day of weekdays) {
-      let currentTime = startTime;
-      while (currentTime <= endTime) {
+      let currentTime = scheduleDto.initialTurnDateTime;
+      while (currentTime <= scheduleDto.finalTurnDateTime) {
         // Crea un nuevo turno para el día actual y hora actual
-        // const newTurn = new Turn();
-        newTurn.dayOfWeek = day;
-        newTurn.startTime = currentTime;
-        newTurn.schedule = savedSchedule;
+        const newTurn = new Turn();
+        // newTurn.classDayType = day;
+        newTurn.dateFrom = currentTime;
+        newTurn.dateTo = currentTime + scheduleDto.turnDuration.toString();
+        // newTurn.schedule = savedSchedule;
   
         // Guarda el turno en la base de datos
         // await getRepository(Turn).save(newTurn);
@@ -56,12 +59,12 @@ export class ScheduleService {
         const date = new Date();
         date.setHours(hours);
         date.setMinutes(minutes);
-        date.setMinutes(date.getMinutes() + interval);
+        date.setMinutes(date.getMinutes() + scheduleDto.turnDuration);
         currentTime = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
       }
     }
   
-    return savedSchedule; // Devuelve la agenda creada
+    // return savedSchedule; // Devuelve la agenda creada
   }
 
   findAll() {

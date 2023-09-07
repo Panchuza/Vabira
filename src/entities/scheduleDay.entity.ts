@@ -10,7 +10,7 @@ export class ScheduleDay {
     @Column({ name: 'Description' })
     description: string
 
-    @OneToOne(() => Schedule, (schedule) => schedule.scheduleDay)
+    // @OneToOne(() => Schedule, (schedule) => schedule.scheduleDay)
     schedule: Schedule
 
 

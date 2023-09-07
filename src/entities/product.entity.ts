@@ -44,7 +44,5 @@ export class Product {
    @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.product)
    saleRecord: SaleRecord;
 
-   @OneToOne(() => Schedule, (schedule) => schedule.product)
-	schedule: Schedule;
 
 }
