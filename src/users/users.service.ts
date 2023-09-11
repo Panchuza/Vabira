@@ -55,14 +55,17 @@ export class UsersService {
             throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         });
-        return userResult;
+        return {
+          status: HttpStatus.CREATED,
+          data: userResult,
+        };
       } else {
         return new HttpException(
           {
-            status: HttpStatus.NOT_FOUND,
+            status: HttpStatus.BAD_REQUEST,
             error: 'Ya existe un usuario con el username o email ingresado',
           },
-          HttpStatus.NOT_FOUND,
+          HttpStatus.BAD_REQUEST,
         );
       }
     } catch (error) {
@@ -171,8 +174,92 @@ export class UsersService {
   }
 
   async update(updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({where: {id: updateUserDto.id, active: true}})
+    const user = await this.userRepository.findOne({ where: { id: updateUserDto.id, active: true } });
+    if (!user) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `El usuario con ID= ${updateUserDto.id} no fue encontrado`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  
+    // Verifica si el usuario está intentando cambiar el username y si el nuevo valor es diferente
+    if (updateUserDto.username && updateUserDto.username !== user.username) {
+      // Verifica si ya existe un usuario con el mismo nuevo username
+      const isUsernameDuplicate = await this.validation(updateUserDto.username, null, null);
+  
+      if (isUsernameDuplicate) {
+        return new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            error: 'Ya existe un usuario con el nuevo username ingresado',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+  
+    // Verifica si el usuario está intentando cambiar el email y si el nuevo valor es diferente
+    if (updateUserDto.email && updateUserDto.email !== user.email) {
+      // Verifica si ya existe un usuario con el mismo nuevo email
+      const isEmailDuplicate = await this.validation(null, updateUserDto.email, null);
+  
+      if (isEmailDuplicate) {
+        return new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            error: 'Ya existe un usuario con el nuevo email ingresado',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+  
+    // Verifica si el usuario está intentando cambiar el dni y si el nuevo valor es diferente
+    if (updateUserDto.dni && updateUserDto.dni !== user.dni) {
+      // Verifica si ya existe un usuario con el mismo nuevo dni
+      const isDniDuplicate = await this.validation(null, null, updateUserDto.dni);
+  
+      if (isDniDuplicate) {
+        return new HttpException(
+          {
+            status: HttpStatus.BAD_REQUEST,
+            error: 'Ya existe un usuario con el nuevo dni ingresado',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+  
+    // Si no hay duplicados en ninguno de los campos editados, procede con la actualización
+    const updatedUser = await this.userRepository.preload({
+      id: updateUserDto.id,
+      ...updateUserDto,
+    });
+  
+    let userResult: any;
+    await this.entityManager.transaction(async (transaction) => {
+      try {
+        userResult = await transaction.save(updatedUser);
+        delete userResult.password;
+      } catch (error) {
+        console.log(error);
+        throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    });
+  
+    return {
+      status: HttpStatus.OK,
+      data: userResult,
+    };
   }
+  
+  
+  
+  
+  
 
   async remove(updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.createQueryBuilder('User')
@@ -198,12 +285,21 @@ export class UsersService {
   }
 
   private newFormatDate(dateOfBirth: string) {
+    // Comprueba si la fecha ya tiene el formato AAAA-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      return dateOfBirth; // No es necesario volver a formatear
+    }
+  
+    // Si no tiene el formato, intenta formatearla
     const dateParts = dateOfBirth.split('-');
-    const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
-    return formattedDate
+    if (dateParts.length === 3) {
+      const formattedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+      return formattedDate;
+    } else {
+      throw new Error('Formato de fecha no válido');
+    }
   }
-
-
+  
   private formatDate(date: Date) {
     return (
       [
@@ -219,8 +315,9 @@ export class UsersService {
       ].join(':')
     );
   }
-
+  
   private padTo2Digits(num: number) {
     return num.toString().padStart(2, '0');
   }
+  
 }
