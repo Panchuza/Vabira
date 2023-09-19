@@ -5,6 +5,7 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { Schedule } from 'src/entities/schedule.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { Turn } from 'src/entities/turn.entity';
+import * as dateFns from 'date-fns';
 
 @Injectable()
 export class ScheduleService {
@@ -18,53 +19,36 @@ export class ScheduleService {
 
   ) { }
 
-  async create(createScheduleDto: CreateScheduleDto) {
+  async createSchedule(createScheduleDto: CreateScheduleDto) {
+    const { days, initialTurnDateTime, finalTurnDateTime, turnDuration } = createScheduleDto;
+    const schedule = []; // Aquí almacenaremos los turnos generados
 
-    const { initialTurnDateTime, finalTurnDateTime, turnDuration, ...toCreate } = createScheduleDto;
-    const scheduleDto = await this.scheduleRepository.create({
-      ...toCreate
-    })
+    // Convierte las horas de inicio y fin en objetos de fecha
+    const startTime = dateFns.parse(initialTurnDateTime, 'HH:mm', new Date());
+    const endTime = dateFns.parse(finalTurnDateTime, 'HH:mm', new Date());
 
-    scheduleDto.initialTurnDateTime = createScheduleDto.initialTurnDateTime
-    scheduleDto.finalTurnDateTime = createScheduleDto.finalTurnDateTime
-    scheduleDto.turnDuration = createScheduleDto.turnDuration
+    // Genera los turnos para cada día seleccionado
+    for (const day of days) {
+      let currentTime = startTime;
 
-    
-    // Define los días laborables de la semana (Lunes a Viernes)
-    const weekdays = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'];
-  
-    // // Define los horarios de inicio y fin
-    // const startTime = '08:00';
-    // const endTime = '20:00';
-  
-    // // Divide el tiempo en intervalos de 1 hora
-    // const interval = 60; // minutos
-  
-    // Crea los turnos para cada día laborable y horario
-    for (const day of weekdays) {
-      let currentTime = scheduleDto.initialTurnDateTime;
-      while (currentTime <= scheduleDto.finalTurnDateTime) {
-        // Crea un nuevo turno para el día actual y hora actual
-        const newTurn = new Turn();
-        // newTurn.classDayType = day;
-        newTurn.dateFrom = currentTime;
-        newTurn.dateTo = currentTime + scheduleDto.turnDuration.toString();
-        // newTurn.schedule = savedSchedule;
-  
-        // Guarda el turno en la base de datos
-        // await getRepository(Turn).save(newTurn);
-  
-        // Incrementa la hora actual en intervalos de 1 hora
-        const [hours, minutes] = currentTime.split(':').map(Number);
-        const date = new Date();
-        date.setHours(hours);
-        date.setMinutes(minutes);
-        date.setMinutes(date.getMinutes() + scheduleDto.turnDuration);
-        currentTime = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      while (dateFns.isBefore(currentTime, endTime)) {
+        // Crea un nuevo turno
+        const turn = {
+          day,
+          time: dateFns.format(currentTime, 'HH:mm'),
+        };
+
+        // Agrega el turno a la agenda
+        schedule.push(turn);
+
+        // Incrementa el tiempo actual según la duración del turno
+        currentTime = dateFns.addMinutes(currentTime, turnDuration);
       }
     }
-  
-    // return savedSchedule; // Devuelve la agenda creada
+
+    // Aquí puedes guardar la agenda generada en la base de datos si es necesario
+
+    return schedule;
   }
 
   findAll() {

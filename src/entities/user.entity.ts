@@ -33,7 +33,7 @@ export class User {
   @Column({ type: 'varchar', length: 256, nullable: false, name: 'Email' })
   email: string;
 
-  @Column( {type: 'varchar', default: ['user']})
+  @Column( {type: 'varchar'})
   roles: string[];
 
   @ApiProperty()
