@@ -7,7 +7,7 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
-  @Post()
+  @Post('create')
   create(@Body() createScheduleDto: CreateScheduleDto) {
     return this.scheduleService.createSchedule(createScheduleDto);
   }

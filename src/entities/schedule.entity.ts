@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { Supplier } from "./supplier.entity";
 import { Turn } from "./turn.entity";
@@ -18,15 +18,14 @@ export class Schedule {
     @Column({ name: 'FinalTurnDateTime', type: 'datetime', nullable: true })
     finalTurnDateTime: string;
 
-    @Column({ name: 'TurnDuration', type: 'datetime', nullable: false })
+    @Column({ name: 'TurnDuration', type: 'int', nullable: true })
     turnDuration: number;
 
-    @Column({ name: 'HasSign', type: 'bit', nullable: false })
+    @Column({ name: 'HasSign', type: 'bit', nullable: true })
     hasSign: boolean;
 
-    @OneToOne(() => Turn, (turn) => turn.schedule)
-    @JoinColumn({ name: 'Turn_Id' })
-    turn: Turn
+    @OneToMany(() => Turn, (turn) => turn.schedule)
+    turn: Turn[]
 
     @OneToOne(() => Supplier, (supplier) => supplier.schedule)
     @JoinColumn({ name: 'Supplier_Id' })
@@ -35,8 +34,5 @@ export class Schedule {
     @OneToOne(() => Turnero, (turnero) => turnero.schedule)
     turnero: Turnero;
 
-    @OneToOne(() => Type)
-    @JoinColumn({ name: 'ClassDay_Type_Id' })
-    classDayType: Type;
 
 }

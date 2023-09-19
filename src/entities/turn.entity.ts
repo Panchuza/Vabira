@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Alert } from "./alert.entity";
 import { Client } from "./client.entity";
 import { Supplier } from "./supplier.entity";
@@ -26,7 +26,8 @@ export class Turn {
     @OneToOne(() => Report, (report) => report.turn)
 	report: Report;
 
-    @OneToOne(() => Schedule, (schedule) => schedule.turn)
+    @ManyToOne(() => Schedule, (schedule) => schedule.turn)
+    @JoinColumn({ name: 'Schedule_Id' })
 	schedule: Schedule;
 
     @OneToOne(() => TurnStatus, (turnStatus) => turnStatus.turn)
