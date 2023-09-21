@@ -82,6 +82,7 @@ export class ScheduleService {
     .addSelect(['Type.id', 'Type.name'])
     .innerJoin('Schedule.turn', 'Turn')
     .innerJoin('Turn.classDayType', 'Type')
+    .where('Schedule.id = :id', {id: id})
     .getOne()
     return schedule;
   }
