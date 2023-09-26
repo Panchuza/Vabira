@@ -46,6 +46,11 @@ export class TypeService {
     return type;
   }
 
+  async GetTypeByCodeDto(id: number) {
+    let type: Type = await this.typeRepository.findOne({ where: { id: id } })
+    return type
+  }
+
   findAll() {
     return `This action returns all type`;
   }
