@@ -11,7 +11,7 @@ export class Country {
   @PrimaryGeneratedColumn('increment', { name: 'Id' })
   id: number;
 
-  @OneToOne(() => Region, (region) => region.country)
+  @ManyToOne(() => Region, (region) => region.country)
   @JoinColumn({ name: 'Region_Id' })
   region: Region;
 
@@ -27,12 +27,12 @@ export class Country {
   @Column({ name: 'Active', type: 'bit', nullable: false })
   active: boolean;
 
-  // @OneToOne(() => Continent, (continent) => continent.country)
-  // @JoinColumn({ name: 'Continent_Id' })
-  // continent: Continent;
+  @ManyToOne(() => Continent, (continent) => continent.country)
+  @JoinColumn({ name: 'Continent_Id' })
+  continent: Continent;
 
-  @OneToOne(() => PoliticalDivision, (politicalDivision) => politicalDivision.country)
-  politicalDivision: PoliticalDivision
+  @OneToMany(() => PoliticalDivision, (politicalDivision) => politicalDivision.country)
+  politicalDivision: PoliticalDivision[]
 
   @OneToOne(() => Client, (client) => client.countryOfOrigin)
   clientOrigin: Client;

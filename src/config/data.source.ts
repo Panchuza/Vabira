@@ -28,6 +28,12 @@ import { TurnStatus } from "src/entities/turnStatus.entity";
 import { Type } from "src/entities/type.entity";
 import { TypeConfig } from "src/entities/typeConfig.entity";
 import { User } from "src/entities/user.entity";
+import { Address } from "src/entities/address.entity";
+import { ClientAddress } from "src/entities/clientAddress.entity";
+import { Continent } from "src/entities/continent.entity";
+import { Country } from "src/entities/country.entity";
+import { PoliticalDivision } from "src/entities/politicalDivision.entity";
+import { Region } from "src/entities/region.entity";
 
 const dest = "dist/common/envs/";
 const env: string | undefined = process.env.NODE_ENV;
@@ -46,7 +52,7 @@ export const Config: DataSourceOptions = {
   username: process.env.DATABASE_USER,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  entities: [Accesses, AccessProfile, Alert, Client, ClientStatus, Faq, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Report
+  entities: [Accesses, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Region, Report
     , SaleRecord, Schedule, ScheduleDay, Sign, SignStatus, Supplier, SupplierStatus, Turn, TurnAttentionDay, Turnero
   , TurnStatus, Type, TypeConfig, User],
   migrations: ["dist/src/migrations/*{.ts,.js}"],

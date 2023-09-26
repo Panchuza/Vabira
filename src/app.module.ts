@@ -14,6 +14,12 @@ import { AuthModule } from './auth/auth.module';
 import { TypeModule } from './type/type.module';
 import { TurnModule } from './turn/turn.module';
 import { ScheduleModule } from './schedule/schedule.module';
+import { ClientModule } from './client/client.module';
+import { SupplierModule } from './supplier/supplier.module';
+import { CountryModule } from './country/country.module';
+import { PoliticalDivisionModule } from './political-division/political-division.module';
+import { ContinentModule } from './continent/continent.module';
+import { RegionModule } from './region/region.module';
 
 
 
@@ -42,6 +48,12 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
     }),
     TurnModule,
     ScheduleModule,
+    ClientModule,
+    SupplierModule,
+    CountryModule,
+    PoliticalDivisionModule,
+    ContinentModule,
+    RegionModule,
   ],
   controllers: [AppController],
   providers: [AppService,

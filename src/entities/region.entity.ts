@@ -1,5 +1,5 @@
 import { IsNotEmpty } from '@nestjs/class-validator';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Double, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, Double, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Continent } from './continent.entity';
 import { Country } from './country.entity';
 
@@ -8,7 +8,7 @@ export class Region {
     @PrimaryGeneratedColumn('increment', { name: 'Id' })
     id: number;
 
-    @OneToOne(() => Continent, (continent) => continent.region)
+    @ManyToOne(() => Continent, (continent) => continent.region)
     @JoinColumn({ name: 'Continent_Id' })
     continent: Continent;
 
@@ -22,6 +22,6 @@ export class Region {
     @Column({ name: 'Active', type: 'bit', nullable: false })
     active: boolean;
 
-    @OneToOne(() => Country, (country) => country.region)
-    country: Country;
+    @OneToMany(() => Country, (country) => country.region)
+    country: Country[];
 }

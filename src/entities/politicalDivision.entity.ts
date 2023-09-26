@@ -13,11 +13,11 @@ export class PoliticalDivision {
   @Column({ name: 'Initials', type: 'varchar', length: 10, nullable: false })
   initials: string;
 
-  @OneToOne(() => Country, (country) => country.politicalDivision)
+  @ManyToOne(() => Country, (country) => country.politicalDivision)
   @JoinColumn({ name: 'Country_Id' })
   country: Country;
 
-  @OneToOne(() => Type)
+  @ManyToOne(() => Type)
   @JoinColumn({ name: 'PoliticalDivision_Type_Id' })
   politicalDivisionType: Type;
 

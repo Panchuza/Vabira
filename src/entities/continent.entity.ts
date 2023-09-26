@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Country } from "./country.entity";
 import { Region } from "./region.entity";
 import { Type } from "./type.entity";
@@ -17,10 +17,10 @@ export class Continent {
   @Column({ name: 'Active', type: 'bit', nullable: false })
   active: boolean;
 
-  // @OneToOne(() => Country, (country) => country.continent)
-  // country: Country
+  @OneToMany(() => Country, (country) => country.continent)
+  country: Country[]
 
-  @OneToOne(() => Region, (region) => region.continent)
-  region: Region
+  @OneToMany(() => Region, (region) => region.continent)
+  region: Region[]
 
 }
