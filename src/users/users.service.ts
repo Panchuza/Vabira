@@ -134,7 +134,7 @@ export class UsersService {
   async findAll() {
     const users = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
-        , 'User.dni', 'User.dateOfBirth', 'User.active'])
+        , 'User.dni', 'User.dateOfBirth', 'User.active', 'User.roles'])
       .where('User.active = 1')
       .getMany()
     return users;
@@ -143,7 +143,7 @@ export class UsersService {
   async findOne(id: number) {
     const user = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
-        , 'User.dni', 'User.dateOfBirth'])
+        , 'User.dni', 'User.dateOfBirth', 'User.roles'])
       .where('User.id = :id', { id: id })
       .andWhere('User.active = 1')
       .getOne()

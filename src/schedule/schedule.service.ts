@@ -75,14 +75,16 @@ export class ScheduleService {
     return schedule;
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, idSupplier: number) {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
     .select(['Schedule.id', 'Schedule.name'])
     .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
     .addSelect(['Type.id', 'Type.name'])
     .innerJoin('Schedule.turn', 'Turn')
     .innerJoin('Turn.classDayType', 'Type')
+    .innerJoin('Schedule.supplier', 'Supplier')
     .where('Schedule.id = :id', {id: id})
+    .andWhere('Supplier.id = :idSupplier', {idSupplier: idSupplier})
     .getOne()
     return schedule;
   }
