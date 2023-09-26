@@ -1,10 +1,12 @@
 import { ClientStatus } from 'src/entities/clientStatus.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { Turn } from './turn.entity';
 import { PurchaseRecord } from './purchaseRecord.entity';
 import { SaleRecord } from './saleRecord.entity';
 import { Schedule } from './schedule.entity';
+import { ClientAddress } from './clientAddress.entity';
+import { Country } from './country.entity';
 
 @Entity('Client')
 export class Client {
@@ -21,6 +23,14 @@ export class Client {
 	@Column({ name: 'UploadDateTime', type: 'datetime', nullable: true })
 	uploadDateTime: string;
 
+  @OneToOne(() => Country, (country) => country.clientOrigin)
+  @JoinColumn({ name: 'CountryOfOrigin_Id' })
+  countryOfOrigin: Country;
+
+  @OneToOne(() => Country, (country) => country.clientResidence)
+  @JoinColumn({ name: 'CountryOfResidence_Id' })
+  countryOfResidence: Country;
+
   @OneToOne(() => ClientStatus, (clientStatus) => clientStatus.client)
   clientStatus: ClientStatus[]
 
@@ -32,6 +42,9 @@ export class Client {
 
   @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.client)
   saleRecord: SaleRecord;
+
+  @OneToMany(() => ClientAddress, (clientAddress) => clientAddress.client, { cascade: true, eager: true })
+  clientAddress: ClientAddress[]
 
 }
 
