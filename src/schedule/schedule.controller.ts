@@ -18,9 +18,13 @@ export class ScheduleController {
   }
 
   @Get('findOne')
-  findOne(@Query('id') id: string, @Query('idSupplier') idSupplier: string) {
-    return this.scheduleService.findOne(+id, +idSupplier);
+  findOne(@Query('id') id: string) {
+    return this.scheduleService.findOne(+id);
   }
+  // @Get('findOne')
+  // findOne(@Query('id') id: string, @Query('idSupplier') idSupplier: string) {
+  //   return this.scheduleService.findOne(+id, +idSupplier);
+  // }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateScheduleDto: UpdateScheduleDto) {

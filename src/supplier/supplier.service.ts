@@ -1,11 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class SupplierService {
-  create(createSupplierDto: CreateSupplierDto) {
-    return 'This action adds a new supplier';
+  
+  constructor(
+    // private readonly userService: UsersService
+  ){}
+  
+  async create(createSupplierDto: CreateSupplierDto) {
+    
+
+
   }
 
   findAll() {
