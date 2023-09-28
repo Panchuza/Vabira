@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { JwtPayload } from 'src/auth/interfaces';
 
+
 @Injectable()
 export class UsersService {
 
@@ -25,9 +26,9 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
 
-    const { username, email, dni, dateOfBirth, password, ...toCreate } = createUserDto;
+    const { username, email, dni, dateOfBirth, password, roles, ...toCreate } = createUserDto;
     
-    let roles:any = ['user']
+    let role:any = createUserDto.roles
 
     try {
       const isValid = await this.validation(username, email, dni);
@@ -43,7 +44,7 @@ export class UsersService {
         userDto.dateOfBirth = this.newFormatDate(dateOfBirth);
         userDto.createdAt = this.formatDate(new Date());
         userDto.active = true;
-        userDto.roles = roles.toString();
+        userDto.roles = role.toString();
 
         let userResult: any;
         await this.entityManager.transaction(async (transaction) => {
@@ -58,9 +59,9 @@ export class UsersService {
         return {
           status: HttpStatus.CREATED,
           data: userResult,
-        };
+        }
       } else {
-        return new HttpException(
+        throw new HttpException(
           {
             status: HttpStatus.BAD_REQUEST,
             error: 'Ya existe un usuario con el username o email ingresado',

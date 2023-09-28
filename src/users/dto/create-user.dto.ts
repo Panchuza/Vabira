@@ -20,14 +20,12 @@ export class CreateUserDto {
     @IsNotEmpty()
     password: string;
 
+    @IsOptional()
     roles: string[]
 
     // @IsDateString()
     @IsOptional()
     dateOfBirth: string;
-
-    @IsOptional()
-    createdAt: string;
 
 
 }

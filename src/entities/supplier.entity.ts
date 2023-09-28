@@ -1,5 +1,5 @@
 import { Type } from "./type.entity";
-import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, BeforeUpdate } from "typeorm"
+import { Column, Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn, OneToMany, BeforeUpdate, BeforeInsert } from "typeorm"
 import { User } from "./user.entity";
 import { SupplierStatus } from "./supplierStatus.entity";
 import { PurchaseRecord } from "./purchaseRecord.entity";
@@ -51,6 +51,11 @@ export class Supplier {
 
 	@OneToMany(() => SupplierStatus, (supplierStatus) => supplierStatus.supplier, { cascade: true, eager: true })
 	supplierStatus: SupplierStatus[];
+
+	@BeforeInsert()
+    insertRegistraionDate() {
+        this.createDateTime = this.formatDate(new Date())
+    }
 
 	@BeforeUpdate()
 	private addUploadDate() {

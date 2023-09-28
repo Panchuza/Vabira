@@ -20,7 +20,6 @@ export class AddressService {
     let typeAdress = await this.typeService.GetTypeByCodeDto(typeAdressId)
     address.addressType = typeAdress
     try{
-      
       await this.addressRepository.save(address)
 
     }catch(error){
