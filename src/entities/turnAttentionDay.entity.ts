@@ -12,7 +12,7 @@ export class TurnAttentionDay {
     @JoinColumn({ name: 'TurnAttentionDay_Type_Id' })
     turnAttentionDay: Type
 
-    @OneToOne(() => Turn, (turn) => turn.turnAttentionDay)
-	turn: Turn;
+    // @OneToOne(() => Turn, (turn) => turn.turnAttentionDay)
+	// turn: Turn;
 
 }

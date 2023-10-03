@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,9 @@ import { EntityManager, Repository } from 'typeorm';
 import { Turn } from 'src/entities/turn.entity';
 import * as dateFns from 'date-fns';
 import { Type } from 'src/entities/type.entity';
+import { TurnService } from 'src/turn/turn.service';
+import { DbException } from 'src/exception/dbException';
+import { Supplier } from 'src/entities/supplier.entity';
 
 @Injectable()
 export class ScheduleService {
@@ -15,6 +18,8 @@ export class ScheduleService {
 
     @InjectRepository(Schedule)
     private scheduleRepository: Repository<Schedule>,
+    @InjectRepository(Supplier)
+    private supplierRepository: Repository<Supplier>,
     @InjectEntityManager()
     private entityManager: EntityManager,
 
@@ -28,6 +33,7 @@ export class ScheduleService {
       where: days.map(day => ({ name: day }))
     });
   
+    const supplierFound = await this.supplierRepository.findOne({where: {id: createScheduleDto.supplier.id}})
     const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
       const schedule = new Schedule();
       schedule.name = createScheduleDto.name
@@ -36,7 +42,7 @@ export class ScheduleService {
       schedule.turnDuration = createScheduleDto.turnDuration
       schedule.initialTurnDateTime = startTime.toISOString()
       schedule.finalTurnDateTime = endTime.toISOString()
-      // schedule.supplier = createScheduleDto.supplier
+      schedule.supplier = supplierFound
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
   
       for (const day of classDayTypes) {
@@ -47,7 +53,9 @@ export class ScheduleService {
           newTurn.dateFrom = currentTime as any;
           newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
           newTurn.classDayType = day;
-          newTurn.schedule = savedSchedule; 
+          newTurn.schedule = savedSchedule;
+          newTurn.supplier = supplierFound
+
 
           await transactionalEntityManager.save(Turn, newTurn);
   

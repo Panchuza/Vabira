@@ -41,9 +41,9 @@ export class Turn {
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier
 
-    @OneToOne(() => TurnAttentionDay, (turnAttentionDay) => turnAttentionDay.turn)
-    @JoinColumn({ name: 'TurnAttentionDay_Id' })
-    turnAttentionDay: TurnAttentionDay
+    // @OneToOne(() => TurnAttentionDay, (turnAttentionDay) => turnAttentionDay.turn)
+    // @JoinColumn({ name: 'TurnAttentionDay_Id' })
+    // turnAttentionDay: TurnAttentionDay
 
     @OneToOne(() => Type)
     @JoinColumn({ name: 'ClassDay_Type_Id' })

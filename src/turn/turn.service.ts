@@ -33,6 +33,8 @@ export class TurnService {
 
   }
 
+  async
+
   async validation(dateFrom, dateTo) {
     const turnFound = await this.turnRepository.findOne({
       where: [{ dateFrom: dateFrom }, { dateTo: dateTo }]

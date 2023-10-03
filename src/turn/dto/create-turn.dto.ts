@@ -6,6 +6,7 @@ import { TurnStatus } from "src/entities/turnStatus.entity";
 import { Client } from "src/entities/client.entity";
 import { TurnAttentionDay } from "src/entities/turnAttentionDay.entity";
 import { Supplier } from "src/entities/supplier.entity";
+import { Type } from "src/entities/type.entity";
 
 export class CreateTurnDto {
 
@@ -15,26 +16,26 @@ export class CreateTurnDto {
     @IsNotEmpty()
     dateTo: string;
 
-    @IsOptional()
-    alert: Alert
+    // @IsOptional()
+    // alert: Alert
 
-    @IsOptional()
-	report: Report;
+    // @IsOptional()
+	// report: Report;
 
     @IsOptional()
 	schedule: Schedule;
 
-    @IsOptional()
-    turnStatus: TurnStatus[]
+    // @IsOptional()
+    // turnStatus: TurnStatus[]
 
-    @IsOptional()
-    client: Client
+    // @IsOptional()
+    // client: Client
 
     @IsOptional()
     supplier: Supplier
 
     @IsOptional()
-    turnAttentionDay: TurnAttentionDay
+    classDayType: Type
 
 
 
