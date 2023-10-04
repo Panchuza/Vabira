@@ -21,7 +21,7 @@ export class CreateScheduleDto {
     @IsInt()
     turnDuration: number; // Duración de cada turno en minutos
 
-    @IsNotEmpty()
+    // @IsNotEmpty()
     hasSign: boolean;
 
     classDayType: Type

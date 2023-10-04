@@ -33,7 +33,7 @@ export class ScheduleService {
       where: days.map(day => ({ name: day }))
     });
   
-    const supplierFound = await this.supplierRepository.findOne({where: {id: createScheduleDto.supplier.id}})
+    // const supplierFound = await this.supplierRepository.findOne({where: {id: createScheduleDto.supplier.id}})
     const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
       const schedule = new Schedule();
       schedule.name = createScheduleDto.name
@@ -42,7 +42,7 @@ export class ScheduleService {
       schedule.turnDuration = createScheduleDto.turnDuration
       schedule.initialTurnDateTime = startTime.toISOString()
       schedule.finalTurnDateTime = endTime.toISOString()
-      schedule.supplier = supplierFound
+      // schedule.supplier = supplierFound
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
   
       for (const day of classDayTypes) {
@@ -54,7 +54,7 @@ export class ScheduleService {
           newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
           newTurn.classDayType = day;
           newTurn.schedule = savedSchedule;
-          newTurn.supplier = supplierFound
+          // newTurn.supplier = supplierFound
 
 
           await transactionalEntityManager.save(Turn, newTurn);
@@ -69,9 +69,6 @@ export class ScheduleService {
     return savedSchedule;
   }
   
-
-
-
   async findAll() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
     .select(['Schedule.id', 'Schedule.name'])
