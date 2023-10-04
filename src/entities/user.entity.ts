@@ -34,7 +34,7 @@ export class User {
   email: string;
 
   @Column( {type: 'varchar'})
-  roles: string[];
+  roles: string;
 
   @ApiProperty()
   @Column({ type: 'varchar', length: 500, nullable: true, name: 'Avatar' })

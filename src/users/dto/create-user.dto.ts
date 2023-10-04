@@ -21,7 +21,7 @@ export class CreateUserDto {
     password: string;
 
     @IsOptional()
-    roles: string[]
+    roles: string
 
     // @IsDateString()
     @IsOptional()
