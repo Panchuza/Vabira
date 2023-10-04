@@ -27,17 +27,17 @@ export class UsersService {
   async create(createUserDto: CreateUserDto) {
 
     const { username, email, dni, dateOfBirth, password, roles, ...toCreate } = createUserDto;
-    
-    let role:any = createUserDto.roles
+
+    let role: any = createUserDto.roles
 
     try {
       const isValid = await this.validation(username, email, dni);
       if (!isValid) {
         const userDto = this.userRepository.create({
           ...toCreate,
-          password: bcrypt.hashSync( password, 10 )
+          password: bcrypt.hashSync(password, 10)
         });
-        
+
         userDto.username = username
         userDto.email = email
         userDto.dni = dni
@@ -75,7 +75,7 @@ export class UsersService {
     }
   }
 
-  async login( loginUserDto: LoginDto ) {
+  async login(loginUserDto: LoginDto) {
 
     const { password, email } = loginUserDto;
 
@@ -84,10 +84,10 @@ export class UsersService {
       select: { email: true, password: true, id: true } //! OJO!
     });
 
-    if ( !user ) 
+    if (!user)
       throw new UnauthorizedException('Credentials are not valid (email)');
-      
-    if ( !bcrypt.compareSync( password, user.password ) )
+
+    if (!bcrypt.compareSync(password, user.password))
       throw new UnauthorizedException('Credentials are not valid (password)');
 
     return {
@@ -96,15 +96,15 @@ export class UsersService {
     };
   }
 
-  private getJwtToken( payload: JwtPayload ) {
+  private getJwtToken(payload: JwtPayload) {
 
-    const token = this.jwtService.sign( payload );
-    
+    const token = this.jwtService.sign(payload);
+
     return token;
 
   }
 
-  async checkAuthStatus( user: User ){
+  async checkAuthStatus(user: User) {
 
     return {
       ...user,
@@ -164,13 +164,11 @@ export class UsersService {
   async findOneByEmail(email: string) {
     const user = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
-        , 'User.dni', 'User.dateOfBirth'])
-      .addSelect(['TypeRole.codTypeRole', 'TypeRole.txtTypeRole'])
-      .leftJoin('User.typeRole', 'TypeRole')
+        , 'User.dni', 'User.dateOfBirth', 'User.roles'])
       .where('User.email = :email', { email: email })
       .andWhere('User.active = 1')
       .getOne()
-      return user;
+    return user;
 
   }
 
@@ -185,12 +183,12 @@ export class UsersService {
         HttpStatus.NOT_FOUND,
       );
     }
-  
+
     // Verifica si el usuario está intentando cambiar el username y si el nuevo valor es diferente
     if (updateUserDto.username && updateUserDto.username !== user.username) {
       // Verifica si ya existe un usuario con el mismo nuevo username
       const isUsernameDuplicate = await this.validation(updateUserDto.username, null, null);
-  
+
       if (isUsernameDuplicate) {
         return new HttpException(
           {
@@ -201,12 +199,12 @@ export class UsersService {
         );
       }
     }
-  
+
     // Verifica si el usuario está intentando cambiar el email y si el nuevo valor es diferente
     if (updateUserDto.email && updateUserDto.email !== user.email) {
       // Verifica si ya existe un usuario con el mismo nuevo email
       const isEmailDuplicate = await this.validation(null, updateUserDto.email, null);
-  
+
       if (isEmailDuplicate) {
         return new HttpException(
           {
@@ -217,12 +215,12 @@ export class UsersService {
         );
       }
     }
-  
+
     // Verifica si el usuario está intentando cambiar el dni y si el nuevo valor es diferente
     if (updateUserDto.dni && updateUserDto.dni !== user.dni) {
       // Verifica si ya existe un usuario con el mismo nuevo dni
       const isDniDuplicate = await this.validation(null, null, updateUserDto.dni);
-  
+
       if (isDniDuplicate) {
         return new HttpException(
           {
@@ -233,13 +231,13 @@ export class UsersService {
         );
       }
     }
-  
+
     // Si no hay duplicados en ninguno de los campos editados, procede con la actualización
     const updatedUser = await this.userRepository.preload({
       id: updateUserDto.id,
       ...updateUserDto,
     });
-  
+
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
       try {
@@ -250,17 +248,12 @@ export class UsersService {
         throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     });
-  
+
     return {
       status: HttpStatus.OK,
       data: userResult,
     };
   }
-  
-  
-  
-  
-  
 
   async remove(updateUserDto: UpdateUserDto) {
     const user = await this.userRepository.createQueryBuilder('User')
@@ -290,7 +283,7 @@ export class UsersService {
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
       return dateOfBirth; // No es necesario volver a formatear
     }
-  
+
     // Si no tiene el formato, intenta formatearla
     const dateParts = dateOfBirth.split('-');
     if (dateParts.length === 3) {
@@ -300,7 +293,7 @@ export class UsersService {
       throw new Error('Formato de fecha no válido');
     }
   }
-  
+
   private formatDate(date: Date) {
     return (
       [
@@ -316,9 +309,9 @@ export class UsersService {
       ].join(':')
     );
   }
-  
+
   private padTo2Digits(num: number) {
     return num.toString().padStart(2, '0');
   }
-  
+
 }

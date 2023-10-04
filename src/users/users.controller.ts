@@ -15,6 +15,8 @@ export class UsersController {
   }
 
   @Get('/all')
+  @RoleProtected(ValidRoles.admin)
+  @Auth()
   findAll() {
     return this.usersService.findAll();
   }
@@ -24,6 +26,12 @@ export class UsersController {
   @Auth()
   findOne(@Query('id') id: string) {
     return this.usersService.findOne(+id);
+  }
+
+  @Get('/findOneEmail')
+  @Auth()
+  findOneEmail(@Query('email') email: string) {
+    return this.usersService.findOneByEmail(email);
   }
 
   @Patch('/update')

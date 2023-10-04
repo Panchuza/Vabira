@@ -8,16 +8,23 @@ import { RoleProtected } from './decorators/role-protected.decorator';
 import { User } from 'src/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { IncomingHttpHeaders } from 'http';
+import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly userService: UsersService,
+    private readonly authService: AuthService
   ) { }
 
   @Post('login')
   loginUser(@Body() loginUserDto: LoginDto) {
     return this.userService.login(loginUserDto);
+  }
+
+  @Post('verify-token')
+  async verifyToken(@Body() { token }: { token: string }) {
+    return this.authService.checkToken(token);
   }
 
   @Get('check-status')

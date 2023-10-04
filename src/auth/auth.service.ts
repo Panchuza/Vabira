@@ -40,4 +40,16 @@ export class AuthService {
   async profile({ email }: { email: string; }) {
     return await this.usersService.findOneByEmail(email);
   }
+
+  async checkToken(token: string){
+    if (!token) {
+      return { message: 'Token no proporcionado' };
+    }
+    try {
+      const decoded = this.jwtService.verify(token);
+      return { message: 'Token válido' };
+    } catch (error) {
+      return { message: 'Token inválido' };
+    }
+  }
 }
