@@ -3,7 +3,6 @@ import { Alert } from "./alert.entity";
 import { Client } from "./client.entity";
 import { Supplier } from "./supplier.entity";
 import { Report } from "./report.entity";
-import { TurnAttentionDay } from "./turnAttentionDay.entity";
 import { Schedule } from "./schedule.entity";
 
 @Entity('Turnero')

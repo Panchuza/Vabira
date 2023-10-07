@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { TurnService } from './turn.service';
 import { CreateTurnDto } from './dto/create-turn.dto';
 import { UpdateTurnDto } from './dto/update-turn.dto';
@@ -12,9 +12,14 @@ export class TurnController {
     return this.turnService.create(createTurnDto);
   }
 
-  @Get()
-  findAll() {
-    return this.turnService.findAll();
+  @Get('findAllForSchedule')
+  findAll(@Query('idSchedule') idSchedule: string   ) {
+    return this.turnService.findAllForSchedule(+idSchedule);
+  }
+
+  @Patch('assignTurn')
+  assignTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.assignTurn(updateTurnDto);
   }
 
   @Get(':id')

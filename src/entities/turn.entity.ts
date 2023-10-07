@@ -3,7 +3,6 @@ import { Alert } from "./alert.entity";
 import { Client } from "./client.entity";
 import { Supplier } from "./supplier.entity";
 import { Report } from "./report.entity";
-import { TurnAttentionDay } from "./turnAttentionDay.entity";
 import { Schedule } from "./schedule.entity";
 import { TurnStatus } from "./turnStatus.entity";
 import { Type } from "./type.entity";
@@ -33,7 +32,7 @@ export class Turn {
     @OneToOne(() => TurnStatus, (turnStatus) => turnStatus.turn)
     turnStatus: TurnStatus[]
 
-    @OneToOne(() => Client, (client) => client.turn)
+    @ManyToOne(() => Client, (client) => client.turn)
     @JoinColumn({ name: 'Client_Id' })
     client: Client
 
@@ -41,11 +40,7 @@ export class Turn {
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier
 
-    // @OneToOne(() => TurnAttentionDay, (turnAttentionDay) => turnAttentionDay.turn)
-    // @JoinColumn({ name: 'TurnAttentionDay_Id' })
-    // turnAttentionDay: TurnAttentionDay
-
-    @OneToOne(() => Type)
+    @ManyToOne(() => Type)
     @JoinColumn({ name: 'ClassDay_Type_Id' })
     classDayType: Type;
 

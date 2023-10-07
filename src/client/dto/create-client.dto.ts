@@ -6,6 +6,6 @@ import { CreateUserDto } from "src/users/dto/create-user.dto"
 export class CreateClientDto extends PartialType(CreateUserDto){
 
     @IsObject()
-    @IsNotEmpty()
+    // @IsNotEmpty()
     address: CreateAddressDto;
 }
