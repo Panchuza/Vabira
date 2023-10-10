@@ -1,6 +1,6 @@
 import { Client } from 'src/entities/client.entity';
 import { Type } from 'src/entities/type.entity';
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { User } from './user.entity';
 import { Turn } from './turn.entity';
 
@@ -9,7 +9,7 @@ export class TurnStatus {
   @PrimaryGeneratedColumn('increment', { name: 'Id' })
   id: number;
 
-  @OneToOne(() => Turn, (turn) => turn.turnStatus)
+  @ManyToOne(() => Turn, (turn) => turn.turnStatus)
   @JoinColumn({ name: 'Turn_Id' })
   turn: Turn;
 

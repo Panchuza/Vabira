@@ -29,7 +29,7 @@ export class Turn {
     @JoinColumn({ name: 'Schedule_Id' })
 	schedule: Schedule;
 
-    @OneToOne(() => TurnStatus, (turnStatus) => turnStatus.turn)
+    @OneToMany(() => TurnStatus, (turnStatus) => turnStatus.turn)
     turnStatus: TurnStatus[]
 
     @ManyToOne(() => Client, (client) => client.turn)

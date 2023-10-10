@@ -17,6 +17,21 @@ export class TurnController {
     return this.turnService.findAllForSchedule(+idSchedule);
   }
 
+  @Get('findAll')
+  findAllTurns() {
+    return this.turnService.findAll();
+  }
+
+  @Get('findAssignTurns')
+  findAssignTurns() {
+    return this.turnService.findAssignTurns();
+  }
+
+  @Get('findNotAssignTurns')
+  findNotAssignTurns() {
+    return this.turnService.findNotAssignTurns();
+  }
+
   @Patch('assignTurn')
   assignTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.assignTurn(updateTurnDto);

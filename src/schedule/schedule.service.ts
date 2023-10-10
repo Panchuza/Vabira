@@ -10,6 +10,8 @@ import { Type } from 'src/entities/type.entity';
 import { TurnService } from 'src/turn/turn.service';
 import { DbException } from 'src/exception/dbException';
 import { Supplier } from 'src/entities/supplier.entity';
+import { TypeService } from 'src/type/type.service';
+import { TurnStatus } from 'src/entities/turnStatus.entity';
 
 @Injectable()
 export class ScheduleService {
@@ -22,6 +24,7 @@ export class ScheduleService {
     private supplierRepository: Repository<Supplier>,
     @InjectEntityManager()
     private entityManager: EntityManager,
+    private readonly typeService: TypeService,
 
   ) { }
 
@@ -46,17 +49,23 @@ export class ScheduleService {
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
   
       for (const day of classDayTypes) {
+        
         let currentTime = startTime;
   
         while (dateFns.isBefore(currentTime, endTime)) {
           const newTurn = new Turn();
+          const newTurnStatus = new TurnStatus()
+          newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date) 
+          newTurnStatus.turnStatusType = await this.validateTypeTurnStatus()
           newTurn.dateFrom = currentTime as any;
           newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
           newTurn.classDayType = day;
           newTurn.schedule = savedSchedule;
+          newTurn.turnStatus = [newTurnStatus]
           // newTurn.supplier = supplierFound
 
 
+          await transactionalEntityManager.save(TurnStatus, newTurnStatus);
           await transactionalEntityManager.save(Turn, newTurn);
   
           currentTime = dateFns.addMinutes(currentTime, turnDuration);
@@ -68,7 +77,11 @@ export class ScheduleService {
 
     return savedSchedule;
   }
-  
+  async validateTypeTurnStatus( ){
+    const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
+    return turnTypeStatus
+  }
+
   async findAll() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
     .select(['Schedule.id', 'Schedule.name'])
@@ -100,5 +113,25 @@ export class ScheduleService {
 
   remove(id: number) {
     return `This action removes a #${id} schedule`;
+  }
+
+  private padTo2Digits(num: number) {
+    return num.toString().padStart(2, '0');
+  }
+
+  private formatDate(date: Date) {
+    return (
+      [
+        date.getFullYear(),
+        this.padTo2Digits(date.getMonth() + 1),
+        this.padTo2Digits(date.getDate()),
+      ].join('-') +
+      ' ' +
+      [
+        this.padTo2Digits(date.getHours()),
+        this.padTo2Digits(date.getMinutes()),
+        this.padTo2Digits(date.getSeconds()),
+      ].join(':')
+    );
   }
 }
