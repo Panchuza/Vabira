@@ -29,14 +29,14 @@ export class ScheduleService {
   ) { }
 
   async createSchedule(createScheduleDto: CreateScheduleDto) {
-    const { days, initialTurnDateTime, finalTurnDateTime, turnDuration } = createScheduleDto;
+    const { days, initialTurnDateTime, finalTurnDateTime, turnDuration, supplier } = createScheduleDto;
     const startTime = dateFns.parse(initialTurnDateTime, 'HH:mm', new Date());
     const endTime = dateFns.parse(finalTurnDateTime, 'HH:mm', new Date());
     const classDayTypes = await this.entityManager.find(Type, {
       where: days.map(day => ({ name: day }))
     });
   
-    // const supplierFound = await this.supplierRepository.findOne({where: {id: createScheduleDto.supplier.id}})
+    const supplierFound = await this.supplierRepository.findOne({where: {user: (supplier.id as any)}})
     const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
       const schedule = new Schedule();
       schedule.name = createScheduleDto.name
@@ -45,7 +45,7 @@ export class ScheduleService {
       schedule.turnDuration = createScheduleDto.turnDuration
       schedule.initialTurnDateTime = startTime.toISOString()
       schedule.finalTurnDateTime = endTime.toISOString()
-      // schedule.supplier = supplierFound
+      schedule.supplier = supplierFound
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
   
       for (const day of classDayTypes) {
@@ -87,8 +87,21 @@ export class ScheduleService {
     .select(['Schedule.id', 'Schedule.name'])
     .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
     .addSelect(['Type.id', 'Type.name'])
-    .innerJoin('Schedule.turn', 'Turn')
-    .innerJoin('Turn.classDayType', 'Type')
+    .addSelect(['Supplier.id', 'User.firstName', 'User.lastName'])
+    .leftJoin('Schedule.turn', 'Turn')
+    .leftJoin('Turn.classDayType', 'Type')
+    .leftJoin('Schedule.supplier', 'Supplier')
+    .leftJoin('Supplier.user', 'User')
+    .getMany()
+    return schedule;
+  }
+
+  async findAllForSupplier() {
+    const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
+    .select(['Schedule.id', 'Schedule.name'])
+    .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
+    .leftJoin('Schedule.supplier', 'Supplier')
+    .leftJoin('Supplier.user', 'User')
     .getMany()
     return schedule;
   }

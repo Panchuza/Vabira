@@ -63,11 +63,12 @@ export class TurnService {
   async findAll() {
     const turns = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
-      .addSelect('client.id')
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
       .addSelect('schedule.id')
       .addSelect(['type.id', 'type.name'])
       .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
       .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
       .leftJoin('Turn.classDayType', 'type')
       .leftJoin('Turn.schedule', 'schedule')
       .leftJoin('Turn.turnStatus', 'turnStatus')
@@ -118,12 +119,13 @@ export class TurnService {
     const status = await this.validateTypeTurnStatus2()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
-      .addSelect('client.id')
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
       .addSelect('schedule.id')
       .addSelect(['type.id', 'type.name'])
       .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
       .addSelect(['turnStatusType.id', 'turnStatusType.name'])
       .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
       .leftJoin('Turn.classDayType', 'type')
       .leftJoin('Turn.schedule', 'schedule')
       .leftJoin(
@@ -157,19 +159,20 @@ export class TurnService {
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
       dateTo: moment(turn.dateTo).format('hh:mm A'),
     }));
-  
+
     return formattedTurns;
   }
   async findNotAssignTurns() {
     const status = await this.validateTypeTurnStatus()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
-      .addSelect('client.id')
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
       .addSelect('schedule.id')
       .addSelect(['type.id', 'type.name'])
       .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
       .addSelect(['turnStatusType.id', 'turnStatusType.name'])
       .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
       .leftJoin('Turn.classDayType', 'type')
       .leftJoin('Turn.schedule', 'schedule')
       .leftJoin(
@@ -194,7 +197,7 @@ export class TurnService {
       )
       .where('turnStatusType.id = :status', { status: status.id })
       .getMany()
-      
+
 
     if (turns.length === 0) {
       throw new BadRequestException('No existen turnos disponibles');
@@ -205,7 +208,7 @@ export class TurnService {
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
       dateTo: moment(turn.dateTo).format('hh:mm A'),
     }));
-  
+
     return formattedTurns;
   }
 

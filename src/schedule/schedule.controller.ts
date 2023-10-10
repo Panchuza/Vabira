@@ -17,6 +17,11 @@ export class ScheduleController {
     return this.scheduleService.findAll();
   }
 
+  @Get('findAllForSupplier')
+  findAllForSupplier() {
+    return this.scheduleService.findAllForSupplier();
+  }
+
   @Get('findOne')
   findOne(@Query('id') id: string) {
     return this.scheduleService.findOne(+id);
