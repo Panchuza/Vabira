@@ -13,6 +13,7 @@ import { Supplier } from 'src/entities/supplier.entity';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 
+
 @Injectable()
 export class ScheduleService {
 
@@ -29,94 +30,114 @@ export class ScheduleService {
   ) { }
 
   async createSchedule(createScheduleDto: CreateScheduleDto) {
-    const { days, initialTurnDateTime, finalTurnDateTime, turnDuration, supplier } = createScheduleDto;
-    const startTime = dateFns.parse(initialTurnDateTime, 'HH:mm', new Date());
-    const endTime = dateFns.parse(finalTurnDateTime, 'HH:mm', new Date());
-    const classDayTypes = await this.entityManager.find(Type, {
-      where: days.map(day => ({ name: day }))
-    });
-  
-    const supplierFound = await this.supplierRepository.findOne({where: {user: (supplier.id as any)}})
+    const { days, turnDuration, supplier, dates } = createScheduleDto;
+
+    // Obtén la fecha de inicio y fin para los turnos
+    const startTime = dateFns.parse(createScheduleDto.initialTurnDateTime, 'HH:mm', new Date());
+    const endTime = dateFns.parse(createScheduleDto.finalTurnDateTime, 'HH:mm', new Date());
+
+    const supplierFound = await this.supplierRepository.findOne({ where: { user: supplier?.id as any } });
+
     const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
       const schedule = new Schedule();
-      schedule.name = createScheduleDto.name
-      schedule.hasSign = createScheduleDto.hasSign
-      schedule.name = createScheduleDto.name
-      schedule.turnDuration = createScheduleDto.turnDuration
+      schedule.name = createScheduleDto.name;
+      schedule.hasSign = createScheduleDto.hasSign;
+      schedule.turnDuration = createScheduleDto.turnDuration;
       schedule.initialTurnDateTime = startTime.toISOString()
       schedule.finalTurnDateTime = endTime.toISOString()
-      schedule.supplier = supplierFound
+      schedule.supplier = supplierFound;
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
-  
-      for (const day of classDayTypes) {
-        
-        let currentTime = startTime;
-  
-        while (dateFns.isBefore(currentTime, endTime)) {
-          const newTurn = new Turn();
-          const newTurnStatus = new TurnStatus()
-          newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date) 
-          newTurnStatus.turnStatusType = await this.validateTypeTurnStatus()
-          newTurn.dateFrom = currentTime as any;
-          newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
-          newTurn.classDayType = day;
-          newTurn.schedule = savedSchedule;
-          newTurn.turnStatus = [newTurnStatus]
-          // newTurn.supplier = supplierFound
 
+      for (let day of days) {
+        if (day === 'Sunday') {
+          day = 'Domingo'
+        } else if (day === 'Monday') {
+          day = 'Lunes'
+        } else if (day === 'Tuesday') {
+          day = 'Martes'
+        } else if (day === 'Wednesday') {
+          day = 'Miercoles'
+        } else if (day === 'Thursday') {
+          day = 'Jueves'
+        } else if (day === 'Friday') {
+          day = 'Viernes'
+        } else {
+          day = 'Sabado'
+        }
+        const classDayType = await this.entityManager.findOneOrFail(Type, { where: { name: day } });
 
-          await transactionalEntityManager.save(TurnStatus, newTurnStatus);
-          await transactionalEntityManager.save(Turn, newTurn);
-  
-          currentTime = dateFns.addMinutes(currentTime, turnDuration);
+        // Itera a través de las fechas seleccionadas en el calendario
+        for (const selectedDate of dates) {
+          console.log(dates);
+
+          const selectedDateISO = dateFns.parseISO(selectedDate); // Parsea la fecha a un objeto Date
+          let currentTime = dateFns.setHours(selectedDateISO, dateFns.getHours(startTime));
+          currentTime = dateFns.setMinutes(currentTime, dateFns.getMinutes(startTime));
+
+          while (dateFns.isBefore(currentTime, dateFns.setHours(selectedDateISO, dateFns.getHours(endTime)))) {
+            const newTurn = new Turn();
+            const newTurnStatus = new TurnStatus();
+            newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
+            newTurnStatus.turnStatusType = await this.validateTypeTurnStatus();
+            newTurn.dateFrom = currentTime as any;
+            newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
+            newTurn.classDayType = classDayType;
+            newTurn.schedule = savedSchedule;
+            newTurn.turnStatus = [newTurnStatus];
+
+            await transactionalEntityManager.save(TurnStatus, newTurnStatus);
+            await transactionalEntityManager.save(Turn, newTurn);
+
+            currentTime = dateFns.addMinutes(currentTime, turnDuration);
+          }
         }
       }
-  
+
       return savedSchedule;
     });
 
     return savedSchedule;
   }
-  async validateTypeTurnStatus( ){
+  async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
   }
 
   async findAll() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-    .select(['Schedule.id', 'Schedule.name'])
-    .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
-    .addSelect(['Type.id', 'Type.name'])
-    .addSelect(['Supplier.id', 'User.firstName', 'User.lastName'])
-    .leftJoin('Schedule.turn', 'Turn')
-    .leftJoin('Turn.classDayType', 'Type')
-    .leftJoin('Schedule.supplier', 'Supplier')
-    .leftJoin('Supplier.user', 'User')
-    .getMany()
+      .select(['Schedule.id', 'Schedule.name'])
+      .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
+      .addSelect(['Type.id', 'Type.name'])
+      .addSelect(['Supplier.id', 'User.firstName', 'User.lastName'])
+      .leftJoin('Schedule.turn', 'Turn')
+      .leftJoin('Turn.classDayType', 'Type')
+      .leftJoin('Schedule.supplier', 'Supplier')
+      .leftJoin('Supplier.user', 'User')
+      .getMany()
     return schedule;
   }
 
   async findAllForSupplier() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-    .select(['Schedule.id', 'Schedule.name'])
-    .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
-    .leftJoin('Schedule.supplier', 'Supplier')
-    .leftJoin('Supplier.user', 'User')
-    .getMany()
+      .select(['Schedule.id', 'Schedule.name'])
+      .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
+      .leftJoin('Schedule.supplier', 'Supplier')
+      .leftJoin('Supplier.user', 'User')
+      .getMany()
     return schedule;
   }
 
   async findOne(id: number) {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-    .select(['Schedule.id', 'Schedule.name'])
-    .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
-    .addSelect(['Type.id', 'Type.name'])
-    .leftJoin('Schedule.turn', 'Turn')
-    .leftJoin('Turn.classDayType', 'Type')
-    .leftJoin('Schedule.supplier', 'Supplier')
-    .where('Schedule.id = :id', {id: id})
-    // .andWhere('Supplier.id = :idSupplier', {idSupplier: idSupplier})
-    .getOne()
+      .select(['Schedule.id', 'Schedule.name'])
+      .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
+      .addSelect(['Type.id', 'Type.name'])
+      .leftJoin('Schedule.turn', 'Turn')
+      .leftJoin('Turn.classDayType', 'Type')
+      .leftJoin('Schedule.supplier', 'Supplier')
+      .where('Schedule.id = :id', { id: id })
+      // .andWhere('Supplier.id = :idSupplier', {idSupplier: idSupplier})
+      .getOne()
     return schedule;
   }
 

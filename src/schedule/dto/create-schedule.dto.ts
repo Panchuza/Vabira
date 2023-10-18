@@ -10,7 +10,11 @@ export class CreateScheduleDto {
 
     @IsArray()
     @IsString({ each: true })
-    days: string[]; // Los días seleccionados por el usuario
+    days: string[]; 
+    // Los días seleccionados por el usuario
+    @IsArray()
+    @IsString({ each: true })
+    dates: string[]; // Los días seleccionados por el usuario
   
     @IsString()
     initialTurnDateTime: string; // Hora de inicio del horario laboral
