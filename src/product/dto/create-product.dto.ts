@@ -10,16 +10,22 @@ export class CreateProductDto {
     brand: string
 
     @IsNotEmpty()
+    description: string
+
+    @IsNotEmpty()
     code: string
 
     @IsNotEmpty()
-    description: string
-
+    prize: number
+    
     @IsNotEmpty()
     quantity: number
 
     @IsNotEmpty()
-    prize: number
+    minimum_stock: number
+
+    @IsNotEmpty()
+    expiry_date: string
 
     @IsNotEmpty()
     image: string

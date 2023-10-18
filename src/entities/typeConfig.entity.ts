@@ -25,5 +25,5 @@ export class TypeConfig {
   hasUniqueCode: boolean;
 
   @OneToMany(() => Type, (type) => type.typeConfig)
-  type: Type
+  type: Type[]
 }
