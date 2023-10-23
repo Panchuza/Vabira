@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { TurnService } from './turn.service';
 import { CreateTurnDto } from './dto/create-turn.dto';
 import { UpdateTurnDto } from './dto/update-turn.dto';
+import { scheduled } from 'rxjs';
 
 @Controller('turn')
 export class TurnController {
@@ -30,6 +31,16 @@ export class TurnController {
   @Get('findNotAssignTurns')
   findNotAssignTurns() {
     return this.turnService.findNotAssignTurns();
+  }
+
+  @Get('findAssignTurnsForSchedule')
+  findAssignTurnsForSchedule(@Query('scheduleId') scheduleId: string) {
+    return this.turnService.findAssignTurnsForSchedule(scheduleId);
+  }
+
+  @Get('findNotAssignTurnsForSchedule')
+  findNotAssignTurnsForSchedule(@Query('scheduleId') scheduleId: string) {
+    return this.turnService.findNotAssignTurnsForSchedule(scheduleId);
   }
 
   @Patch('assignTurn')

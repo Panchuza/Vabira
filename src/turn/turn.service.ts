@@ -51,14 +51,14 @@ export class TurnService {
     }
   }
 
-  async findAllForSchedule(idSchedule: number) {
-    const turns = await this.turnRepository.createQueryBuilder('Turn')
-      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule'])
-      .leftJoin('Turn.schedule', 'Schedule')
-      .where('Schedule.id = :id', { id: idSchedule })
-      .getMany()
-    return turns
-  }
+  // async findAllForSchedule(idSchedule: number) {
+  //   const turns = await this.turnRepository.createQueryBuilder('Turn')
+  //     .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule'])
+  //     .leftJoin('Turn.schedule', 'Schedule')
+  //     .where('Schedule.id = :id', { id: idSchedule })
+  //     .getMany()
+  //   return turns
+  // }
 
   async findAll() {
     const turns = await this.turnRepository.createQueryBuilder('Turn')
@@ -75,6 +75,31 @@ export class TurnService {
       .leftJoin('turnStatus.turnStatusType', 'turnStatusType')
       .getMany()
     return turns
+  }
+
+  async findAllForSchedule(idSchedule: number) {
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin('Turn.turnStatus', 'turnStatus')
+      .leftJoin('turnStatus.turnStatusType', 'turnStatusType')
+      .where('Schedule.id = :id', { id: idSchedule })
+      .getMany()
+      const formattedTurns = turns.map(turn => ({
+        ...turn,
+        dateFrom: moment(turn.dateFrom).format('hh:mm A'),
+        dateTo: moment(turn.dateTo).format('hh:mm A'),
+        monthDay: moment(turn.dateFrom).format('DD/MM'),
+      }));
+  
+      return formattedTurns;
   }
 
   async assignTurn(updateTurnDto: UpdateTurnDto) {
@@ -207,6 +232,107 @@ export class TurnService {
       ...turn,
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
       dateTo: moment(turn.dateTo).format('hh:mm A'),
+    }));
+
+    return formattedTurns;
+  }
+  async findAssignTurnsForSchedule(scheduleId: string) {
+    const status = await this.validateTypeTurnStatus2()
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
+      .where('turnStatusType.id = :status', { status: status.id })
+      .andWhere('Turn.schedule = :scheduleId', {scheduleId: scheduleId})
+      .getMany()
+
+    if (turns.length === 0) {
+      throw new BadRequestException('No existen turnos reservados');
+    }
+    
+    const formattedTurns = turns.map(turn => ({
+      ...turn,
+      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
+      dateTo: moment(turn.dateTo).format('hh:mm A'),
+      monthDay: moment(turn.dateFrom).format('DD/MM'),
+    }));
+
+    return formattedTurns;
+  }
+  async findNotAssignTurnsForSchedule(scheduleId: string) {
+    const status = await this.validateTypeTurnStatus()
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
+      .where('turnStatusType.id = :status', { status: status.id })
+      .andWhere('Turn.schedule = :scheduleId', {scheduleId: scheduleId})
+      .getMany()
+
+
+    if (turns.length === 0) {
+      throw new BadRequestException('No existen turnos disponibles');
+    }
+
+    const formattedTurns = turns.map(turn => ({
+      ...turn,
+      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
+      dateTo: moment(turn.dateTo).format('hh:mm A'),
+      monthDay: moment(turn.dateFrom).format('DD/MM'),
     }));
 
     return formattedTurns;
