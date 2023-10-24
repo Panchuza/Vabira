@@ -21,7 +21,7 @@ import { PoliticalDivisionModule } from './political-division/political-division
 import { ContinentModule } from './continent/continent.module';
 import { RegionModule } from './region/region.module';
 import { ProductModule } from './product/product.module';
-
+import { FaqModule } from './faq/faq.module';
 
 
 const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
@@ -56,6 +56,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
     ContinentModule,
     RegionModule,
     ProductModule,
+    FaqModule,
   ],
   controllers: [AppController],
   providers: [AppService,

@@ -6,11 +6,12 @@ export class Faq {
    @PrimaryGeneratedColumn('increment', {name:'Id'})
    id: number
 
-   @Column({name: 'Name'})
-   name: string
+   @Column({ name: 'Name', default: 'Default Name' })
+   name: string;
+   
 
    @Column({name: 'Description'})
-   description: string
+   description: string //respuesta
 
    @OneToOne(() => User, (user) => user.faq)
    @JoinColumn({ name: 'UserRegistration_Id' })
