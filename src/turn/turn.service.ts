@@ -34,11 +34,7 @@ export class TurnService {
         throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     });
-
-
-
   }
-
   async validation(dateFrom, dateTo) {
     const turnFound = await this.turnRepository.findOne({
       where: [{ dateFrom: dateFrom }, { dateTo: dateTo }]
@@ -50,15 +46,6 @@ export class TurnService {
       return true;
     }
   }
-
-  // async findAllForSchedule(idSchedule: number) {
-  //   const turns = await this.turnRepository.createQueryBuilder('Turn')
-  //     .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule'])
-  //     .leftJoin('Turn.schedule', 'Schedule')
-  //     .where('Schedule.id = :id', { id: idSchedule })
-  //     .getMany()
-  //   return turns
-  // }
 
   async findAll() {
     const turns = await this.turnRepository.createQueryBuilder('Turn')
@@ -139,7 +126,6 @@ export class TurnService {
     }
     throw new BadRequestException('El turno solicitado ya esta registrado')
   }
-
   async findAssignTurns() {
     const status = await this.validateTypeTurnStatus2()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
@@ -337,12 +323,10 @@ export class TurnService {
 
     return formattedTurns;
   }
-
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
   }
-
   async validateTypeTurnStatus2() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoReservado')
     return turnTypeStatus

@@ -12,6 +12,7 @@ import { DbException } from 'src/exception/dbException';
 import { Supplier } from 'src/entities/supplier.entity';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
+import { es } from 'date-fns/locale';
 
 
 @Injectable()
@@ -31,50 +32,52 @@ export class ScheduleService {
 
   async createSchedule(createScheduleDto: CreateScheduleDto) {
     const { days, turnDuration, supplier, dates } = createScheduleDto;
-
+  
     // Obtén la fecha de inicio y fin para los turnos
     const startTime = dateFns.parse(createScheduleDto.initialTurnDateTime, 'HH:mm', new Date());
     const endTime = dateFns.parse(createScheduleDto.finalTurnDateTime, 'HH:mm', new Date());
-
+  
     const supplierFound = await this.supplierRepository.findOne({ where: { user: supplier?.id as any } });
-
+  
     const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
       const schedule = new Schedule();
       schedule.name = createScheduleDto.name;
       schedule.hasSign = createScheduleDto.hasSign;
       schedule.turnDuration = createScheduleDto.turnDuration;
-      schedule.initialTurnDateTime = startTime.toISOString()
-      schedule.finalTurnDateTime = endTime.toISOString()
+      schedule.initialTurnDateTime = startTime.toISOString();
+      schedule.finalTurnDateTime = endTime.toISOString();
       schedule.supplier = supplierFound;
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
-
-      for (let day of days) {
-        if (day === 'Sunday') {
-          day = 'Domingo'
-        } else if (day === 'Monday') {
-          day = 'Lunes'
-        } else if (day === 'Tuesday') {
-          day = 'Martes'
-        } else if (day === 'Wednesday') {
-          day = 'Miercoles'
-        } else if (day === 'Thursday') {
-          day = 'Jueves'
-        } else if (day === 'Friday') {
-          day = 'Viernes'
-        } else {
-          day = 'Sabado'
-        }
-        const classDayType = await this.entityManager.findOneOrFail(Type, { where: { name: day } });
-
-        // Itera a través de las fechas seleccionadas en el calendario
-        for (const selectedDate of dates) {
-          console.log(dates);
-
-          const selectedDateISO = dateFns.parseISO(selectedDate); // Parsea la fecha a un objeto Date
-          let currentTime = dateFns.setHours(selectedDateISO, dateFns.getHours(startTime));
+  
+      for (const selectedDate of dates) {
+        const selectedDayOfWeek = dateFns.format(new Date(selectedDate), 'EEEE', { locale: es }); // Obtén el nombre del día de la semana en español
+        const capitalizedSelectedDayOfWeek = selectedDayOfWeek.charAt(0).toUpperCase() + selectedDayOfWeek.slice(1);
+  
+        const modifiedDays = days.map(day => {
+          if (day === 'Sunday') {
+            return 'Domingo';
+          } else if (day === 'Monday') {
+            return 'Lunes';
+          } else if (day === 'Tuesday') {
+            return 'Martes';
+          } else if (day === 'Wednesday') {
+            return 'Miércoles';
+          } else if (day === 'Thursday') {
+            return 'Jueves';
+          } else if (day === 'Friday') {
+            return 'Viernes';
+          } else {
+            return 'Sábado';
+          }
+        });
+  
+        if (modifiedDays.includes(capitalizedSelectedDayOfWeek as any) ) { // Verifica si el día coincide con los días seleccionados
+          const classDayType = await this.entityManager.findOneOrFail(Type, { where: { name: capitalizedSelectedDayOfWeek } });
+  
+          let currentTime = dateFns.setHours(new Date(selectedDate), dateFns.getHours(startTime));
           currentTime = dateFns.setMinutes(currentTime, dateFns.getMinutes(startTime));
-
-          while (dateFns.isBefore(currentTime, dateFns.setHours(selectedDateISO, dateFns.getHours(endTime)))) {
+  
+          while (dateFns.isBefore(currentTime, dateFns.setHours(new Date(selectedDate), dateFns.getHours(endTime)))) {
             const newTurn = new Turn();
             const newTurnStatus = new TurnStatus();
             newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
@@ -84,20 +87,23 @@ export class ScheduleService {
             newTurn.classDayType = classDayType;
             newTurn.schedule = savedSchedule;
             newTurn.turnStatus = [newTurnStatus];
-
+  
             await transactionalEntityManager.save(TurnStatus, newTurnStatus);
             await transactionalEntityManager.save(Turn, newTurn);
-
+  
             currentTime = dateFns.addMinutes(currentTime, turnDuration);
           }
         }
       }
-
+  
       return savedSchedule;
     });
-
+  
     return savedSchedule;
   }
+  
+
+
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
