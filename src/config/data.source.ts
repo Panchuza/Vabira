@@ -45,7 +45,7 @@ console.log("filePath:" + filePath)
 console.log("DATABASE_HOST:" + process.env.DATABASE_HOST)
 
 export const Config: DataSourceOptions = {
-  type: "mysql",
+  type: "mssql",
   host: process.env.DATABASE_HOST,
   port: +process.env.DATABASE_PORT,
   username: process.env.DATABASE_USER,
@@ -57,8 +57,8 @@ export const Config: DataSourceOptions = {
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   migrationsRun: false,
   synchronize: false,
-  // connectionTimeout: 60000,
-  // requestTimeout: 90000,
+  connectionTimeout: 60000,
+  requestTimeout: 90000,
   extra: {
     trustServerCertificate: true,
   },
