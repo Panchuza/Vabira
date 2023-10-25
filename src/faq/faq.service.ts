@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { Faq } from '../entities/faq.entity';
 import { CreateFaqDto } from '../faq/dto/create-faq.dto';
 import { UpdateFaqDto } from '../faq/dto/update-faq.dto';
-import { User } from '../entities/user.entity';
 
 @Injectable()
 export class FaqService {

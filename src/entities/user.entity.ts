@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinTable, ManyToMany, OneToOne, JoinColumn, BeforeInsert } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, JoinTable, ManyToMany, OneToOne, JoinColumn, BeforeInsert, ManyToOne } from 'typeorm';
 import { ClientStatus } from './clientStatus.entity';
 import { Profiles } from './profile.entity';
 import { Client } from './client.entity';
@@ -107,5 +107,7 @@ export class User {
 
   @ManyToMany(() => Profiles, (profile) => profile.profileUser, { cascade: true })
   Profiles: Profiles[]
+
+
 
 }

@@ -46,4 +46,15 @@ export class FaqController {
     }
     await this.faqService.remove(id);
   }
+
+  @Put('/update/:id') // Ruta para actualizar una FAQ específica por ID
+  async updateFaq(@Param('id') id: number, @Body() updateFaqDto: UpdateFaqDto): Promise<Faq> {
+    try {
+      const updatedFaq = await this.faqService.update(id, updateFaqDto);
+      return updatedFaq;
+    } catch (error) {
+      throw new NotFoundException(`Faq with ID ${id} not found`);
+    }
+  }
+
 }

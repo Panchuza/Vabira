@@ -26,4 +26,6 @@ export class Turnero {
     @JoinColumn({ name: 'Schedule_Id' })
     schedule: Schedule
 
+    //falta relacion a company
+
 }
