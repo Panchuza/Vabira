@@ -35,6 +35,7 @@ export class TurnService {
       }
     });
   }
+  
   async validation(dateFrom, dateTo) {
     const turnFound = await this.turnRepository.findOne({
       where: [{ dateFrom: dateFrom }, { dateTo: dateTo }]
@@ -222,9 +223,9 @@ export class TurnService {
       .andWhere('Turn.schedule = :scheduleId', {scheduleId: scheduleId})
       .getMany()
 
-    if (turns.length === 0) {
-      throw new BadRequestException('No existen turnos reservados');
-    }
+    // if (turns.length === 0) {
+    //   throw new BadRequestException('No existen turnos reservados');
+    // }
     
     const formattedTurns = turns.map(turn => ({
       ...turn,
@@ -273,9 +274,9 @@ export class TurnService {
       .getMany()
 
 
-    if (turns.length === 0) {
-      throw new BadRequestException('No existen turnos disponibles');
-    }
+    // if (turns.length === 0) {
+    //   throw new BadRequestException('No existen turnos disponibles');
+    // }
 
     const formattedTurns = turns.map(turn => ({
       ...turn,

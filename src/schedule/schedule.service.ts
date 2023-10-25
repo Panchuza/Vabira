@@ -64,6 +64,9 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       if (capitalizedSelectedDayOfWeek === "Miércoles") {
         capitalizedSelectedDayOfWeek = "Miercoles";
       }
+      if (capitalizedSelectedDayOfWeek === "Sábado") {
+        capitalizedSelectedDayOfWeek = "Sabado";
+      }
       const modifiedDays = days.map(day => {
         if (day === 'Sunday') {
           return 'Domingo';
@@ -77,7 +80,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
           return 'Jueves';
         } else if (day === 'Friday') {
           return 'Viernes';
-        } else {
+        } else if (day === 'Saturday'){
           return 'Sabado';
         }
       });
