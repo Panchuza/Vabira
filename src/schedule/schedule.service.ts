@@ -13,6 +13,7 @@ import { Supplier } from 'src/entities/supplier.entity';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { es } from 'date-fns/locale';
+import * as moment from 'moment';
 
 
 @Injectable()
@@ -51,8 +52,10 @@ export class ScheduleService {
   
       for (const selectedDate of dates) {
         const selectedDayOfWeek = dateFns.format(new Date(selectedDate), 'EEEE', { locale: es }); // Obtén el nombre del día de la semana en español
-        const capitalizedSelectedDayOfWeek = selectedDayOfWeek.charAt(0).toUpperCase() + selectedDayOfWeek.slice(1);
-  
+        let capitalizedSelectedDayOfWeek = selectedDayOfWeek.charAt(0).toUpperCase() + selectedDayOfWeek.slice(1);
+        if(capitalizedSelectedDayOfWeek === "Miércoles"){
+          capitalizedSelectedDayOfWeek = "Miercoles"
+        }
         const modifiedDays = days.map(day => {
           if (day === 'Sunday') {
             return 'Domingo';
@@ -61,16 +64,16 @@ export class ScheduleService {
           } else if (day === 'Tuesday') {
             return 'Martes';
           } else if (day === 'Wednesday') {
-            return 'Miércoles';
+            return 'Miercoles';
           } else if (day === 'Thursday') {
             return 'Jueves';
           } else if (day === 'Friday') {
             return 'Viernes';
           } else {
-            return 'Sábado';
+            return 'Sabado';
           }
         });
-  
+        
         if (modifiedDays.includes(capitalizedSelectedDayOfWeek as any) ) { // Verifica si el día coincide con los días seleccionados
           const classDayType = await this.entityManager.findOneOrFail(Type, { where: { name: capitalizedSelectedDayOfWeek } });
   
@@ -78,6 +81,8 @@ export class ScheduleService {
           currentTime = dateFns.setMinutes(currentTime, dateFns.getMinutes(startTime));
   
           while (dateFns.isBefore(currentTime, dateFns.setHours(new Date(selectedDate), dateFns.getHours(endTime)))) {
+            console.log('entra?');
+            
             const newTurn = new Turn();
             const newTurnStatus = new TurnStatus();
             newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
@@ -101,8 +106,6 @@ export class ScheduleService {
   
     return savedSchedule;
   }
-  
-
 
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
@@ -144,6 +147,14 @@ export class ScheduleService {
       .where('Schedule.id = :id', { id: id })
       // .andWhere('Supplier.id = :idSupplier', {idSupplier: idSupplier})
       .getOne()
+      if(schedule){
+        schedule.turn = schedule.turn.map(turn => ({
+          ...turn,
+          dateFrom: moment(turn.dateFrom).format('YYYY-MM-DDTHH:mm:ss.SSS'),
+          dateTo: moment(turn.dateTo).format('YYYY-MM-DDTHH:mm:ss.SSS'),
+          monthDay: moment(turn.dateFrom).format('DD/MM'),
+        }));
+      }
     return schedule;
   }
 

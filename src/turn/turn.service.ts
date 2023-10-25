@@ -81,51 +81,14 @@ export class TurnService {
       .getMany()
       const formattedTurns = turns.map(turn => ({
         ...turn,
-        dateFrom: moment(turn.dateFrom).format('hh:mm A'),
-        dateTo: moment(turn.dateTo).format('hh:mm A'),
+        dateFrom: moment(turn.dateFrom).format('YYYY-MM-DDTHH:mm:ss.SSS'),
+        dateTo: moment(turn.dateTo).format('YYYY-MM-DDTHH:mm:ss.SSS'),
         monthDay: moment(turn.dateFrom).format('DD/MM'),
       }));
   
       return formattedTurns;
   }
 
-  async assignTurn(updateTurnDto: UpdateTurnDto) {
-    const turn = await this.turnRepository.createQueryBuilder('Turn')
-      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
-      .addSelect('client.id')
-      .addSelect('schedule.id')
-      .leftJoin('Turn.client', 'client')
-      .leftJoin('Turn.schedule', 'schedule')
-      .where('Turn.id = :id', { id: updateTurnDto.id })
-      .getOne()
-    const newTurnStatus = new TurnStatus()
-    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
-    newTurnStatus.turnStatusType = await this.validateTypeTurnStatus2()
-    newTurnStatus.turn = turn
-    if (!turn.client) {
-      try {
-        let turnResult: any
-        await this.entityManager.transaction(async (transaction) => {
-          try {
-            turn.client = updateTurnDto.client
-            await this.turnStatusRepository.save(newTurnStatus);
-            turnResult = await transaction.save(turn);
-          } catch (error) {
-            console.log(error);
-            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        });
-        return {
-          status: HttpStatus.OK,
-          data: turnResult,
-        }
-      } catch (error) {
-        console.log(error);
-        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    }
-    throw new BadRequestException('El turno solicitado ya esta registrado')
-  }
   async findAssignTurns() {
     const status = await this.validateTypeTurnStatus2()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
@@ -330,6 +293,44 @@ export class TurnService {
   async validateTypeTurnStatus2() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoReservado')
     return turnTypeStatus
+  }
+
+  async assignTurn(updateTurnDto: UpdateTurnDto) {
+    const turn = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
+      .addSelect('client.id')
+      .addSelect('schedule.id')
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('Turn.schedule', 'schedule')
+      .where('Turn.id = :id', { id: updateTurnDto.id })
+      .getOne()
+    const newTurnStatus = new TurnStatus()
+    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
+    newTurnStatus.turnStatusType = await this.validateTypeTurnStatus2()
+    newTurnStatus.turn = turn
+    if (!turn.client) {
+      try {
+        let turnResult: any
+        await this.entityManager.transaction(async (transaction) => {
+          try {
+            turn.client = updateTurnDto.client
+            await this.turnStatusRepository.save(newTurnStatus);
+            turnResult = await transaction.save(turn);
+          } catch (error) {
+            console.log(error);
+            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+        });
+        return {
+          status: HttpStatus.OK,
+          data: turnResult,
+        }
+      } catch (error) {
+        console.log(error);
+        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+    throw new BadRequestException('El turno solicitado ya esta registrado')
   }
 
   findOne(id: number) {

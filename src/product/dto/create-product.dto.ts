@@ -30,7 +30,7 @@ export class CreateProductDto {
     @IsNotEmpty()
     image: string
 
-    @IsNotEmpty()
-    productType: Type
+    // @IsNotEmpty()
+    // productType: Type
 
 }
