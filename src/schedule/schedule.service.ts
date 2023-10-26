@@ -31,7 +31,6 @@ export class ScheduleService {
 
   ) { }
 
-// ...
 
 async createSchedule(createScheduleDto: CreateScheduleDto) {
   const { days, turnDuration, supplier, dates } = createScheduleDto;
@@ -116,9 +115,6 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
   return savedSchedule;
 }
 
-// ...
-
-
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
@@ -168,14 +164,6 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       }));
     }
     return schedule;
-  }
-
-  update(id: number, updateScheduleDto: UpdateScheduleDto) {
-    return `This action updates a #${id} schedule`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} schedule`;
   }
 
   private padTo2Digits(num: number) {

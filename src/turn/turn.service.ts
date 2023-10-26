@@ -20,21 +20,6 @@ export class TurnService {
     private entityManager: EntityManager,
     private readonly typeService: TypeService
   ) { }
-  async create(createTurnDto: CreateTurnDto) {
-
-    let turnDto = new Turn;
-    const { dateFrom, dateTo, ...toCreate } = createTurnDto;
-
-    let turnResult
-    await this.entityManager.transaction(async (transaction) => {
-      try {
-        turnResult = await transaction.save(turnDto);
-      } catch (error) {
-        console.log(error);
-        throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-      }
-    });
-  }
   
   async validation(dateFrom, dateTo) {
     const turnFound = await this.turnRepository.findOne({
@@ -46,23 +31,6 @@ export class TurnService {
     } else {
       return true;
     }
-  }
-
-  async findAll() {
-    const turns = await this.turnRepository.createQueryBuilder('Turn')
-      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
-      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
-      .addSelect('schedule.id')
-      .addSelect(['type.id', 'type.name'])
-      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
-      .leftJoin('Turn.client', 'client')
-      .leftJoin('client.user', 'user')
-      .leftJoin('Turn.classDayType', 'type')
-      .leftJoin('Turn.schedule', 'schedule')
-      .leftJoin('Turn.turnStatus', 'turnStatus')
-      .leftJoin('turnStatus.turnStatusType', 'turnStatusType')
-      .getMany()
-    return turns
   }
 
   async findAllForSchedule(idSchedule: number) {
@@ -90,102 +58,6 @@ export class TurnService {
       return formattedTurns;
   }
 
-  async findAssignTurns() {
-    const status = await this.validateTypeTurnStatus2()
-    const turns = await this.turnRepository.createQueryBuilder('Turn')
-      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
-      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
-      .addSelect('schedule.id')
-      .addSelect(['type.id', 'type.name'])
-      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
-      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
-      .leftJoin('Turn.client', 'client')
-      .leftJoin('client.user', 'user')
-      .leftJoin('Turn.classDayType', 'type')
-      .leftJoin('Turn.schedule', 'schedule')
-      .leftJoin(
-        (qb) =>
-          qb
-            .select('Turn.id', 'id')
-            .addSelect('MAX(ss.Id)', 'smax')
-            .from(Turn, 'Turn')
-            .leftJoin('Turn.turnStatus', 'ss')
-            .groupBy('Turn.id'),
-        'sm',
-        'sm.id = Turn.id',
-      )
-      .leftJoin(
-        'Turn.turnStatus',
-        'turnStatus',
-        'turnStatus.id = sm.smax',
-      )
-      .leftJoin(
-        'turnStatus.turnStatusType',
-        'turnStatusType',
-      )
-      .where('turnStatusType.id = :status', { status: status.id })
-      .getMany()
-
-    if (turns.length === 0) {
-      throw new BadRequestException('No existen turnos reservados');
-    }
-    const formattedTurns = turns.map(turn => ({
-      ...turn,
-      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
-      dateTo: moment(turn.dateTo).format('hh:mm A'),
-    }));
-
-    return formattedTurns;
-  }
-  async findNotAssignTurns() {
-    const status = await this.validateTypeTurnStatus()
-    const turns = await this.turnRepository.createQueryBuilder('Turn')
-      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
-      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
-      .addSelect('schedule.id')
-      .addSelect(['type.id', 'type.name'])
-      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
-      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
-      .leftJoin('Turn.client', 'client')
-      .leftJoin('client.user', 'user')
-      .leftJoin('Turn.classDayType', 'type')
-      .leftJoin('Turn.schedule', 'schedule')
-      .leftJoin(
-        (qb) =>
-          qb
-            .select('Turn.id', 'id')
-            .addSelect('MAX(ss.Id)', 'smax')
-            .from(Turn, 'Turn')
-            .leftJoin('Turn.turnStatus', 'ss')
-            .groupBy('Turn.id'),
-        'sm',
-        'sm.id = Turn.id',
-      )
-      .leftJoin(
-        'Turn.turnStatus',
-        'turnStatus',
-        'turnStatus.id = sm.smax',
-      )
-      .leftJoin(
-        'turnStatus.turnStatusType',
-        'turnStatusType',
-      )
-      .where('turnStatusType.id = :status', { status: status.id })
-      .getMany()
-
-
-    if (turns.length === 0) {
-      throw new BadRequestException('No existen turnos disponibles');
-    }
-
-    const formattedTurns = turns.map(turn => ({
-      ...turn,
-      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
-      dateTo: moment(turn.dateTo).format('hh:mm A'),
-    }));
-
-    return formattedTurns;
-  }
   async findAssignTurnsForSchedule(scheduleId: string) {
     const status = await this.validateTypeTurnStatus2()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
@@ -236,6 +108,7 @@ export class TurnService {
 
     return formattedTurns;
   }
+
   async findNotAssignTurnsForSchedule(scheduleId: string) {
     const status = await this.validateTypeTurnStatus()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
@@ -309,6 +182,7 @@ export class TurnService {
     newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
     newTurnStatus.turnStatusType = await this.validateTypeTurnStatus2()
     newTurnStatus.turn = turn
+    
     if (!turn.client) {
       try {
         let turnResult: any
@@ -332,18 +206,6 @@ export class TurnService {
       }
     }
     throw new BadRequestException('El turno solicitado ya esta registrado')
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} turn`;
-  }
-
-  update(id: number, updateTurnDto: UpdateTurnDto) {
-    return `This action updates a #${id} turn`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} turn`;
   }
 
   private padTo2Digits(num: number) {
