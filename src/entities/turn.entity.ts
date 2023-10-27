@@ -36,10 +36,6 @@ export class Turn {
     @JoinColumn({ name: 'Client_Id' })
     client: Client
 
-    @OneToOne(() => Supplier, (supplier) => supplier.turn)
-    @JoinColumn({ name: 'Supplier_Id' })
-    supplier: Supplier
-
     @ManyToOne(() => Type)
     @JoinColumn({ name: 'ClassDay_Type_Id' })
     classDayType: Type;

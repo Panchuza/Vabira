@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 
 @Entity('Accesses')
@@ -6,7 +6,7 @@ export class Accesses {
     @PrimaryGeneratedColumn('increment', { name: 'Id' })
     id: number;
 
-    @OneToOne(() => Type)
+    @ManyToOne(() => Type)
 	@JoinColumn({ name: 'Access_Type_Id' })
     accessType: Type;
 

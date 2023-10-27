@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -6,6 +6,10 @@ import { EntityManager, Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { Client } from 'src/entities/client.entity';
 import { DbException } from 'src/exception/dbException';
+import { plainToClass } from 'class-transformer';
+import { ClientAddress } from 'src/entities/clientAddress.entity';
+import { TypeService } from 'src/type/type.service';
+import { Address } from 'src/entities/address.entity';
 
 @Injectable()
 export class ClientService {
@@ -15,10 +19,11 @@ export class ClientService {
     @InjectRepository(Client)
     private clientRepository: Repository<Client>,
     private userService: UsersService,
+    private typeService: TypeService,
     @InjectEntityManager()
     private entityManager: EntityManager,
 
-  ){ }
+  ) { }
 
   async create(createClientDto: CreateClientDto) {
     const { firstName, lastName, dateOfBirth, username, email, dni, password, roles, ...clientData } = createClientDto;
@@ -40,10 +45,11 @@ export class ClientService {
             password,
             roles: role.toString(),
           });
-
+          let typeAdress = await this.typeService.findTypeByCodeJust('DomicilioReal')
+          clientData.clientAddress[0].address['addressType'] = typeAdress
           const client = this.clientRepository.create({
-            ...clientData,
-            user: clientUser.data,
+            clientAddress: clientData.clientAddress,
+            user: clientUser.data
           });
           clientResult = await transaction.save(client);
         } catch (error) {
@@ -61,12 +67,45 @@ export class ClientService {
     }
   }
 
-  findAll() {
-    return `This action returns all client`;
+  async findAll() {
+    const users = await this.clientRepository.createQueryBuilder('Client')
+      .select('Client.id')
+      .addSelect(['ClientAddress.id', 'Address.address', 'Country.name', 'PoliticalDivision.name'])
+      .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.active'])
+      .leftJoin('Client.user', 'User')
+      .leftJoin('Client.clientAddress', 'ClientAddress')
+      .leftJoin('ClientAddress.address', 'Address')
+      .leftJoin('Address.country', 'Country')
+      .leftJoin('Address.politicalDivision', 'PoliticalDivision')
+      .where('User.active = 1')
+      .getMany()
+    return users;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} client`;
+  async findOne(id: number) {
+    const client = await this.clientRepository.createQueryBuilder('Client')
+      .select('Client.id')
+      .addSelect(['ClientAddress.id', 'Address.address', 'Country.name', 'PoliticalDivision.name'])
+      .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.active'])
+      .leftJoin('Client.user', 'User')
+      .leftJoin('Client.clientAddress', 'ClientAddress')
+      .leftJoin('ClientAddress.address', 'Address')
+      .leftJoin('Address.country', 'Country')
+      .leftJoin('Address.politicalDivision', 'PoliticalDivision')
+      .where('Client.id = :id', { id: id })
+      .andWhere('User.active = 1')
+      .getOne()
+    if (!client) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe un cliente con el id ${id} ingresado o esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return client;
+    }
   }
 
   update(id: number, updateClientDto: UpdateClientDto) {

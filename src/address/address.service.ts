@@ -14,10 +14,10 @@ export class AddressService {
     private addressRepository: Repository<Address>,
     private typeService: TypeService
     ){}
-  async create(createAddressDto: CreateAddressDto, typeAdressId: number, entityManager?: EntityManager){
+  async create(createAddressDto: CreateAddressDto, entityManager?: EntityManager){
     console.log("entre al address")
     let address = plainToClass(Address,createAddressDto)
-    let typeAdress = await this.typeService.GetTypeByCodeDto(typeAdressId)
+    let typeAdress = await this.typeService.findTypeByCodeJust('DomicilioReal')
     address.addressType = typeAdress
     try{
       await this.addressRepository.save(address)

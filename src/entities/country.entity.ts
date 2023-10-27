@@ -34,13 +34,7 @@ export class Country {
   @OneToMany(() => PoliticalDivision, (politicalDivision) => politicalDivision.country)
   politicalDivision: PoliticalDivision[]
 
-  @OneToOne(() => Client, (client) => client.countryOfOrigin)
-  clientOrigin: Client;
-
-  @OneToOne(() => Client, (client) => client.countryOfResidence)
-  clientResidence: Client;
-
-  @OneToOne(() => Address, (address) => address.country)
-  address: Address;
+  @OneToMany(() => Address, (address) => address.country)
+  address: Address[];
 
 }

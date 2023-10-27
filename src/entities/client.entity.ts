@@ -23,14 +23,6 @@ export class Client {
 	@Column({ name: 'UploadDateTime', type: 'datetime', nullable: true })
 	uploadDateTime: string;
 
-  @OneToOne(() => Country, (country) => country.clientOrigin)
-  @JoinColumn({ name: 'CountryOfOrigin_Id' })
-  countryOfOrigin: Country;
-
-  @OneToOne(() => Country, (country) => country.clientResidence)
-  @JoinColumn({ name: 'CountryOfResidence_Id' })
-  countryOfResidence: Country;
-
   @OneToOne(() => ClientStatus, (clientStatus) => clientStatus.client)
   clientStatus: ClientStatus[]
 

@@ -21,7 +21,7 @@ export class Turnero {
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier
 
-    @OneToOne(() => Schedule, (schedule) => schedule.turnero)
+    @OneToMany(() => Schedule, (schedule) => schedule.turnero)
     @JoinColumn({ name: 'Schedule_Id' })
     schedule: Schedule
 

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { Supplier } from "./supplier.entity";
 import { Turn } from "./turn.entity";
@@ -27,11 +27,11 @@ export class Schedule {
     @OneToMany(() => Turn, (turn) => turn.schedule)
     turn: Turn[]
 
-    @OneToOne(() => Supplier, (supplier) => supplier.schedule)
+    @ManyToOne(() => Supplier, (supplier) => supplier.schedule)
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier;
 
-    @OneToOne(() => Turnero, (turnero) => turnero.schedule)
+    @ManyToOne(() => Turnero, (turnero) => turnero.schedule)
     turnero: Turnero;
 
 

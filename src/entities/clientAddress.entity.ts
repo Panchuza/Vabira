@@ -14,7 +14,7 @@ export class ClientAddress {
     @JoinColumn({ name: 'Client_Id' })
     client: Client;
 
-    @OneToOne(() => Address, (address) => address.clientAddress, { cascade: true })
+    @ManyToOne(() => Address, (address) => address.clientAddress, {cascade: true})
     @JoinColumn({ name: 'Address_Id' })
     address: Address;
 }

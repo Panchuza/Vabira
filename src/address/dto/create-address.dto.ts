@@ -11,7 +11,6 @@ export class CreateAddressDto {
     @ValidateNested()
     @Typet(() => AssignDto)
     @IsObject()
-    @IsNotEmpty()
     addressType: AssignDto
 
     @ValidateNested()

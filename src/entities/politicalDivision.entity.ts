@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Country } from "./country.entity";
 import { Type } from "./type.entity";
+import { Address } from "./address.entity";
 
 @Entity('PoliticalDivision')
 export class PoliticalDivision {
@@ -16,6 +17,9 @@ export class PoliticalDivision {
   @ManyToOne(() => Country, (country) => country.politicalDivision)
   @JoinColumn({ name: 'Country_Id' })
   country: Country;
+
+  @ManyToOne(() => Address, (address) => address.politicalDivision)
+  address: Address[];
 
   @ManyToOne(() => Type)
   @JoinColumn({ name: 'PoliticalDivision_Type_Id' })

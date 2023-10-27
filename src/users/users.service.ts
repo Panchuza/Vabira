@@ -231,13 +231,13 @@ export class UsersService {
         );
       }
     }
-
+    let newPass = bcrypt.hashSync(updateUserDto.password, 10)
     // Si no hay duplicados en ninguno de los campos editados, procede con la actualización
     const updatedUser = await this.userRepository.preload({
       id: updateUserDto.id,
       ...updateUserDto,
     });
-
+    updatedUser.password = newPass;
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
       try {

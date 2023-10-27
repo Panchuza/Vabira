@@ -16,7 +16,6 @@ import { Receipt } from "src/entities/receipt.entity";
 import { Report } from "src/entities/report.entity";
 import { SaleRecord } from "src/entities/saleRecord.entity";
 import { Schedule } from "src/entities/schedule.entity";
-import { ScheduleDay } from "src/entities/scheduleDay.entity";
 import { Sign } from "src/entities/sign.entity";
 import { SignStatus } from "src/entities/signStatus.entity";
 import { Supplier } from "src/entities/supplier.entity";
@@ -52,11 +51,11 @@ export const Config: DataSourceOptions = {
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [Accesses, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Region, Report
-    , SaleRecord, Schedule, ScheduleDay, Sign, SignStatus, Supplier, SupplierStatus, Turn, Turnero
+    , SaleRecord, Schedule, Sign, SignStatus, Supplier, SupplierStatus, Turn, Turnero
 , TurnStatus, Type, TypeConfig, User],
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   migrationsRun: false,
-  synchronize: false,
+  synchronize: true,
   connectionTimeout: 60000,
   requestTimeout: 90000,
   extra: {
