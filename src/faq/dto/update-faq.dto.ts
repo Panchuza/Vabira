@@ -1,5 +1,11 @@
-export class UpdateFaqDto {
-    name?: string;
-    description?: string;
-    userId?: number; // El ID del usuario relacionado
-  }
+import { PartialType } from '@nestjs/swagger';
+import { CreateFaqDto } from './create-faq.dto';
+import { IsOptional } from 'class-validator';
+
+export class UpdateFaqDto extends PartialType(CreateFaqDto) {
+
+
+    @IsOptional()
+    id?: number
+
+}

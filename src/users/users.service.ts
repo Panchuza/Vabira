@@ -232,17 +232,37 @@ export class UsersService {
       }
     }
 
+ // Verificar la contraseña antigua
+ if (updateUserDto.oldPassword && !bcrypt.compareSync(updateUserDto.oldPassword, user.password)) { //
+  console.error('Error: La contraseña antigua proporcionada no es válida');
+  throw new HttpException(
+    {
+      status: HttpStatus.BAD_REQUEST,
+      error: 'La contraseña antigua proporcionada no es válida',
+    },
+    HttpStatus.BAD_REQUEST,
+  );
+}
+
+
+if (updateUserDto.password) {
+  updateUserDto.password = bcrypt.hashSync(updateUserDto.password, 10);
+}
+
+
+
     // Si no hay duplicados en ninguno de los campos editados, procede con la actualización
     const updatedUser = await this.userRepository.preload({
       id: updateUserDto.id,
       ...updateUserDto,
+      
     });
 
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
       try {
         userResult = await transaction.save(updatedUser);
-        delete userResult.password;
+        // delete userResult.password;
       } catch (error) {
         console.log(error);
         throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
