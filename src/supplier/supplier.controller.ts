@@ -22,6 +22,11 @@ export class SupplierController {
     return this.supplierService.findOne(+id);
   }
 
+  @Get('findOneSupplierByEmail')
+  findOneSupplierByEmail(@Query('email') email: string) {
+    return this.supplierService.findOneSupplierByEmail(email);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateSupplierDto: UpdateSupplierDto) {
     return this.supplierService.update(+id, updateSupplierDto);

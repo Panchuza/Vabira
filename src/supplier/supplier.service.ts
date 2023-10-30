@@ -89,6 +89,27 @@ export class SupplierService {
       return supplier;
     }
   }
+
+  async findOneSupplierByEmail(email: string) {
+    const supplier = await this.supplierRepository.createQueryBuilder('Supplier')
+      .select(['Supplier.id', 'Supplier.identificationNumber', 'Supplier.cuit'])
+      .addSelect(['User.username', 'User.firstName', 'User.email', 'User.lastName', 'User.dni', 'User.dateOfBirth', 'User.active'])
+      .leftJoin('Supplier.user', 'User')
+      .where('User.email = :email', { email: email })
+      .andWhere('User.active = 1')
+      .getOne()
+    if (!supplier) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe un proveedor con el email ${email} ingresado o esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return supplier;
+    }
+  }
   
   update(id: number, updateSupplierDto: UpdateSupplierDto) {
     return `This action updates a #${id} supplier`;

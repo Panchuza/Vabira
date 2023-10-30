@@ -13,7 +13,7 @@ export class TurnStatus {
   @JoinColumn({ name: 'Turn_Id' })
   turn: Turn;
 
-  @OneToOne(() => Type)
+  @ManyToOne(() => Type)
   @JoinColumn({ name: 'TurnStatus_Type_Id' })
   turnStatusType: Type;
 
@@ -21,7 +21,7 @@ export class TurnStatus {
   @JoinColumn({ name: 'StatusRegistration_User_Id' })
   statusRegistrationUser: User;
 
-  @OneToOne(() => Type)
+  @ManyToOne(() => Type)
   @JoinColumn({ name: 'TurnStatusReason_Type_Id' })
   turnStatusReasonType: Type;
 

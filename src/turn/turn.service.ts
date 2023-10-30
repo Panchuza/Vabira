@@ -160,10 +160,12 @@ export class TurnService {
 
     return formattedTurns;
   }
+  
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
   }
+
   async validateTypeTurnStatus2() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoReservado')
     return turnTypeStatus

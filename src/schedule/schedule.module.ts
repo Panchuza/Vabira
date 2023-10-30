@@ -9,9 +9,10 @@ import { Supplier } from 'src/entities/supplier.entity';
 import { TypeService } from 'src/type/type.service';
 import { Type } from 'src/entities/type.entity';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
+import { User } from 'src/entities/user.entity';
 
 @Module({
-  imports: [ TypeOrmModule.forFeature([Schedule, Turn, Supplier, Type, TurnStatus]),],
+  imports: [ TypeOrmModule.forFeature([Schedule, Turn, Supplier, Type, TurnStatus, User]),],
   controllers: [ScheduleController],
   providers: [ScheduleService, TurnService, TypeService]
 })

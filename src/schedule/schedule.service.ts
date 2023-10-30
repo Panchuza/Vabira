@@ -14,6 +14,7 @@ import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { es } from 'date-fns/locale';
 import * as moment from 'moment';
+import { User } from 'src/entities/user.entity';
 
 
 @Injectable()
@@ -25,6 +26,8 @@ export class ScheduleService {
     private scheduleRepository: Repository<Schedule>,
     @InjectRepository(Supplier)
     private supplierRepository: Repository<Supplier>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     @InjectEntityManager()
     private entityManager: EntityManager,
     private readonly typeService: TypeService,
@@ -44,8 +47,8 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
   if (turnDuration > timeDiff) {
     throw new Error('La duración del turno excede el tiempo disponible.');
   }
-
-  const supplierFound = await this.supplierRepository.findOne({ where: { user: supplier?.id as any } });
+  const userFound = await this.userRepository.findOne({where: {id: supplier.id}})
+  const supplierFound = await this.supplierRepository.findOne({ where: { user: userFound as any} });
 
   const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
     const schedule = new Schedule();

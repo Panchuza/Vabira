@@ -70,7 +70,7 @@ export class ClientService {
   async findAll() {
     const users = await this.clientRepository.createQueryBuilder('Client')
       .select('Client.id')
-      .addSelect(['ClientAddress.id', 'Address.address', 'Country.name', 'PoliticalDivision.name'])
+      .addSelect(['ClientAddress.id', 'Address.address', 'Address.postalCode', 'Country.name', 'PoliticalDivision.name'])
       .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.active'])
       .leftJoin('Client.user', 'User')
       .leftJoin('Client.clientAddress', 'ClientAddress')
@@ -85,7 +85,7 @@ export class ClientService {
   async findOne(id: number) {
     const client = await this.clientRepository.createQueryBuilder('Client')
       .select('Client.id')
-      .addSelect(['ClientAddress.id', 'Address.address', 'Country.name', 'PoliticalDivision.name'])
+      .addSelect(['ClientAddress.id', 'Address.address', 'Address.postalCode', 'Country.name', 'PoliticalDivision.name'])
       .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.active'])
       .leftJoin('Client.user', 'User')
       .leftJoin('Client.clientAddress', 'ClientAddress')
