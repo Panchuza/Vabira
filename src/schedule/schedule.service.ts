@@ -125,7 +125,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       .select(['Schedule.id', 'Schedule.name'])
       .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
       .addSelect(['Type.id', 'Type.name'])
-      .addSelect(['Supplier.id', 'User.firstName', 'User.lastName'])
+      .addSelect(['Supplier.id', 'User.firstName', 'User.lastName', 'User.username'])
       .leftJoin('Schedule.turn', 'Turn')
       .leftJoin('Turn.classDayType', 'Type')
       .leftJoin('Schedule.supplier', 'Supplier')

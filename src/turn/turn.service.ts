@@ -8,6 +8,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import * as moment from 'moment';
+import { Alert } from 'src/entities/alert.entity';
 
 @Injectable()
 export class TurnService {
@@ -177,35 +178,46 @@ export class TurnService {
       .leftJoin('Turn.client', 'client')
       .leftJoin('Turn.schedule', 'schedule')
       .where('Turn.id = :id', { id: updateTurnDto.id })
-      .getOne()
-    const newTurnStatus = new TurnStatus()
-    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
-    newTurnStatus.turnStatusType = await this.validateTypeTurnStatus2()
-    newTurnStatus.turn = turn
-    
+      .getOne();
+  
+    const newTurnStatus = new TurnStatus();
+    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date);
+    newTurnStatus.turnStatusType = await this.validateTypeTurnStatus2();
+    newTurnStatus.turn = turn;
+  
     if (!turn.client) {
       try {
-        let turnResult: any
+        let turnResult: any;
+        let alertResult: any;
+  
         await this.entityManager.transaction(async (transaction) => {
           try {
-            turn.client = updateTurnDto.client
+            turn.client = updateTurnDto.client;
             await this.turnStatusRepository.save(newTurnStatus);
             turnResult = await transaction.save(turn);
+  
+            // Crear una nueva alerta asociada al turno
+            const newAlert = new Alert();
+            newAlert.name = 'Nueva Alerta';
+            newAlert.description = 'Descripción de la nueva alerta';
+            newAlert.turn = turn;
+            alertResult = await transaction.save(newAlert);
           } catch (error) {
             console.log(error);
             throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
           }
         });
+  
         return {
           status: HttpStatus.OK,
-          data: turnResult,
-        }
+          data: { turn: turnResult, alert: alertResult },
+        };
       } catch (error) {
         console.log(error);
         throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
-    throw new BadRequestException('El turno solicitado ya esta registrado')
+    throw new BadRequestException('El turno solicitado ya está registrado');
   }
 
   private padTo2Digits(num: number) {
