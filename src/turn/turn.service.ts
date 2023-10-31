@@ -8,6 +8,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import * as moment from 'moment';
+import { Client } from 'src/entities/client.entity';
 
 @Injectable()
 export class TurnService {
@@ -16,11 +17,13 @@ export class TurnService {
     private turnRepository: Repository<Turn>,
     @InjectRepository(TurnStatus)
     private turnStatusRepository: Repository<TurnStatus>,
+    @InjectRepository(Client)
+    private clientRepository: Repository<Client>,
     @InjectEntityManager()
     private entityManager: EntityManager,
     private readonly typeService: TypeService
   ) { }
-  
+
   async validation(dateFrom, dateTo) {
     const turnFound = await this.turnRepository.findOne({
       where: [{ dateFrom: dateFrom }, { dateTo: dateTo }]
@@ -48,14 +51,14 @@ export class TurnService {
       .leftJoin('turnStatus.turnStatusType', 'turnStatusType')
       .where('Schedule.id = :id', { id: idSchedule })
       .getMany()
-      const formattedTurns = turns.map(turn => ({
-        ...turn,
-        dateFrom: moment(turn.dateFrom).format('YYYY-MM-DDTHH:mm:ss.SSS'),
-        dateTo: moment(turn.dateTo).format('YYYY-MM-DDTHH:mm:ss.SSS'),
-        monthDay: moment(turn.dateFrom).format('DD/MM'),
-      }));
-  
-      return formattedTurns;
+    const formattedTurns = turns.map(turn => ({
+      ...turn,
+      dateFrom: moment(turn.dateFrom).format('YYYY-MM-DDTHH:mm:ss.SSS'),
+      dateTo: moment(turn.dateTo).format('YYYY-MM-DDTHH:mm:ss.SSS'),
+      monthDay: moment(turn.dateFrom).format('DD/MM'),
+    }));
+
+    return formattedTurns;
   }
 
   async findAssignTurnsForSchedule(scheduleId: string) {
@@ -92,13 +95,13 @@ export class TurnService {
         'turnStatusType',
       )
       .where('turnStatusType.id = :status', { status: status.id })
-      .andWhere('Turn.schedule = :scheduleId', {scheduleId: scheduleId})
+      .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
       .getMany()
 
     // if (turns.length === 0) {
     //   throw new BadRequestException('No existen turnos reservados');
     // }
-    
+
     const formattedTurns = turns.map(turn => ({
       ...turn,
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
@@ -143,7 +146,7 @@ export class TurnService {
         'turnStatusType',
       )
       .where('turnStatusType.id = :status', { status: status.id })
-      .andWhere('Turn.schedule = :scheduleId', {scheduleId: scheduleId})
+      .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
       .getMany()
 
 
@@ -160,7 +163,7 @@ export class TurnService {
 
     return formattedTurns;
   }
-  
+
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
@@ -208,6 +211,40 @@ export class TurnService {
       }
     }
     throw new BadRequestException('El turno solicitado ya esta registrado')
+  }
+
+  async unAssignTurn(updateTurnDto: UpdateTurnDto) {
+    const client = await this.clientRepository.findOne({ where: { id: updateTurnDto.client.id } })
+    const turnAssignedSelect = await this.turnRepository.findOne({ where: { client: client as any, id: updateTurnDto.id } })
+
+    if (turnAssignedSelect) {
+      const newTurnStatus = new TurnStatus()
+      newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
+      newTurnStatus.turnStatusType = await this.validateTypeTurnStatus()
+      newTurnStatus.turn = turnAssignedSelect
+      try {
+        let turnResult: any
+        await this.entityManager.transaction(async (transaction) => {
+          try {
+            turnAssignedSelect.client = null;
+            await this.turnStatusRepository.save(newTurnStatus);
+            turnResult = await transaction.save(turnAssignedSelect);
+          } catch (error) {
+            console.log(error);
+            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+        });
+        return {
+          status: HttpStatus.OK,
+          data: turnResult,
+        }
+      } catch (error) {
+        console.log(error);
+        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    } else {
+      throw new BadRequestException('El turno no corresponde al cliente logueado')
+    }
   }
 
   private padTo2Digits(num: number) {

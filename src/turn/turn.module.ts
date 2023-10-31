@@ -9,8 +9,9 @@ import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { Type } from 'src/entities/type.entity';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
+import { Client } from 'src/entities/client.entity';
 
-@Module({imports: [TypeOrmModule.forFeature([Turn, AuthGuard, User, Type, TurnStatus]),
+@Module({imports: [TypeOrmModule.forFeature([Turn, AuthGuard, User, Type, TurnStatus, Client]),
 ],
   controllers: [TurnController],
   providers: [TurnService, JwtService, AuthGuard, TypeService]

@@ -28,4 +28,9 @@ export class TurnController {
     return this.turnService.assignTurn(updateTurnDto);
   }
 
+  @Patch('unAssignTurn')
+  unAssignTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.unAssignTurn(updateTurnDto);
+  }
+
 }

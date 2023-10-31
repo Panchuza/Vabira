@@ -108,6 +108,32 @@ export class ClientService {
     }
   }
 
+  async findOneClientByEmail(email: string) {
+    const supplier = await this.clientRepository.createQueryBuilder('Client')
+      .select('Client.id')
+      .addSelect(['ClientAddress.id', 'Address.address', 'Address.postalCode', 'Country.name', 'PoliticalDivision.name'])
+      .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.active'])
+      .leftJoin('Client.user', 'User')
+      .leftJoin('Client.clientAddress', 'ClientAddress')
+      .leftJoin('ClientAddress.address', 'Address')
+      .leftJoin('Address.country', 'Country')
+      .leftJoin('Address.politicalDivision', 'PoliticalDivision')
+      .where('User.email = :email', { email: email })
+      .andWhere('User.active = 1')
+      .getOne()
+    if (!supplier) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe un cliente con el email ${email} ingresado o esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return supplier;
+    }
+  }
+
   update(id: number, updateClientDto: UpdateClientDto) {
     return `This action updates a #${id} client`;
   }

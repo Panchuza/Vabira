@@ -10,9 +10,10 @@ import { TypeService } from 'src/type/type.service';
 import { Type } from 'src/entities/type.entity';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { User } from 'src/entities/user.entity';
+import { Client } from 'src/entities/client.entity';
 
 @Module({
-  imports: [ TypeOrmModule.forFeature([Schedule, Turn, Supplier, Type, TurnStatus, User]),],
+  imports: [ TypeOrmModule.forFeature([Schedule, Turn, Supplier, Type, TurnStatus, User, Client]),],
   controllers: [ScheduleController],
   providers: [ScheduleService, TurnService, TypeService]
 })
