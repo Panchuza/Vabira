@@ -22,13 +22,13 @@ export class CreateProductDto {
     quantity: number
 
     @IsNotEmpty()
-    minimum_stock: number
+    stock: number
 
     @IsNotEmpty()
-    expiry_date: string
+    caducityDatetime: string
 
-    @IsNotEmpty()
-    image: string
+    // @IsNotEmpty()
+    // image: string
 
     // @IsNotEmpty()
     // productType: Type

@@ -28,8 +28,14 @@ export class Product {
    @Column({ name: 'Prize', type: 'decimal', precision: 8, scale: 2, nullable: true })
    prize: number
 
-   @Column({ name: 'Image' })
-   image: string
+   @Column({ name: 'Stock' })
+   stock: number
+
+   @Column({ name: 'caducityDatetime', type: 'date' })
+   caducityDatetime: string
+
+   // @Column({ name: 'Image' })
+   // image: string
 
    @OneToOne(() => Report, (report) => report.product)
 	report: Report;
