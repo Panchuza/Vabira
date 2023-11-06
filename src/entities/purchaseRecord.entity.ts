@@ -20,10 +20,6 @@ export class PurchaseRecord {
     @JoinColumn({ name: 'Product_Type_Id' })
     productType: Type
 
-    @OneToOne(() => Client, (client) => client.purchaseRecord)
-    @JoinColumn({ name: 'Client_Id' })
-    client: Client;
-
     @OneToOne(() => Supplier, (supplier) => supplier.purchaseRecord)
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier;

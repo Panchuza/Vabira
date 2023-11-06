@@ -1,20 +1,18 @@
-import { Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Profiles } from "./profile.entity";
 import { User } from "./user.entity";
 
 @Entity('ProfileUser')
 export class ProfileUser {
-   @PrimaryColumn({name: 'ProfilesId'})
-   profileId: number
+   @PrimaryGeneratedColumn('increment',{name: 'id'})
+   id: number
 
-   @PrimaryColumn({name: 'UsersId'})
-   userId: number
-
-   @ManyToOne(profile => Profiles, profile => profile.profileUser)
-   @JoinColumn({ name: 'Profiles_Id' })
-   profiles: Profiles
-
-   @ManyToOne(user => User, user => user.profileUser)
-   @JoinColumn({ name: 'User_Id' })
+   @ManyToOne(() => User, (user) => user.profileUser)
+   @JoinColumn({name: 'user_Id'})
    user: User
+
+   @ManyToOne(() => Profiles, (profile) => profile.profileUser)
+   @JoinColumn({name: 'profile_Id'})
+   profile: Profiles
+
 }

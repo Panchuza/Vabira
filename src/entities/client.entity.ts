@@ -29,9 +29,6 @@ export class Client {
 	@OneToMany(() => Turn, (turn) => turn.client)
 	turn: Turn[]
 
-	@OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.client)
-	purchaseRecord: PurchaseRecord;
-
 	@OneToOne(() => SaleRecord, (saleRecord) => saleRecord.client)
 	saleRecord: SaleRecord;
 

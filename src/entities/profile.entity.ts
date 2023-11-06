@@ -1,20 +1,19 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ProfileUser } from "./profileUser.entity";
+import { AccessProfile } from "./accessProfile.entity";
+import { ProfileType } from "./profileType.entity";
 
 @Entity('Profiles')
 export class Profiles {
-   @PrimaryGeneratedColumn('increment', {name:'Id'})
+   @PrimaryGeneratedColumn('increment', {name: 'id'})
    id: number
 
-   @Column({name: 'Name'})
+   @Column({name: 'name', length: 80})
    name: string
 
-   @Column({name: 'StateId'})
-   state: number
+   @OneToMany(() => AccessProfile, (accessProfile) => accessProfile.profile, {cascade: true})
+   accessProfile: AccessProfile[]
 
-   @Column({name: 'Active'})
-   active: boolean
-
-   @OneToMany(profileUser =>ProfileUser, (profileUser) => profileUser.profiles )
+   @OneToMany(() => ProfileUser, (profileUser) => profileUser.profile)
    profileUser: ProfileUser[]
 }

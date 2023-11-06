@@ -31,7 +31,7 @@ export class Product {
    @Column({ name: 'Stock' })
    stock: number
 
-   @Column({ name: 'caducityDatetime', type: 'date' })
+   @Column({ name: 'CaducityDatetime', type: 'date' })
    caducityDatetime: string
 
    // @Column({ name: 'Image' })

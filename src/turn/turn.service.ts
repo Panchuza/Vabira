@@ -43,12 +43,31 @@ export class TurnService {
       .addSelect('schedule.id')
       .addSelect(['type.id', 'type.name'])
       .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
       .leftJoin('Turn.client', 'client')
       .leftJoin('client.user', 'user')
       .leftJoin('Turn.classDayType', 'type')
       .leftJoin('Turn.schedule', 'schedule')
-      .leftJoin('Turn.turnStatus', 'turnStatus')
-      .leftJoin('turnStatus.turnStatusType', 'turnStatusType')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
       .where('Schedule.id = :id', { id: idSchedule })
       .getMany()
     const formattedTurns = turns.map(turn => ({

@@ -6,6 +6,7 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { DbException } from 'src/exception/dbException';
 import { Supplier } from 'src/entities/supplier.entity';
+import { Profiles } from 'src/entities/profile.entity';
 
 @Injectable()
 export class SupplierService {
@@ -14,6 +15,8 @@ export class SupplierService {
     private readonly userService: UsersService,
     @InjectRepository(Supplier)
     private readonly supplierRepository: Repository<Supplier>,
+    @InjectRepository(Profiles)
+    private readonly profileRepository: Repository<Profiles>,
     @InjectEntityManager()
     private entityManager: EntityManager,
   ) { }
@@ -23,21 +26,12 @@ export class SupplierService {
 
     let role: any = ['user', 'supplier'];
     let supplierUser: any;
-
     try {
       let supplierResult: any
       await this.entityManager.transaction(async (transaction) => {
         try {
-          supplierUser = await this.userService.create({
-            firstName,
-            lastName,
-            dateOfBirth,
-            username,
-            email,
-            dni,
-            password,
-            roles: role.toString(),
-          });
+          supplierUser = await this.userService.create({firstName,lastName,dateOfBirth,username,email,dni,password, 
+            roles: role.toString(), profileType: 'Supplier'}, true);
 
           const supplier = this.supplierRepository.create({
             ...supplierData,

@@ -1,4 +1,4 @@
-import { IsDateString, IsEmail, IsNotEmpty, IsOptional, Length } from "class-validator";
+import { IsDateString, IsEmail, IsNotEmpty, IsOptional, IsString, Length } from "class-validator";
 
 export class CreateUserDto {
 
@@ -24,6 +24,10 @@ export class CreateUserDto {
 
     @IsOptional()
     roles: string
+
+    @IsString()
+    @IsOptional()
+    profileType: string
 
     // @IsDateString()
     @IsOptional()

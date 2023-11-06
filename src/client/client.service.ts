@@ -44,7 +44,8 @@ export class ClientService {
             dni,
             password,
             roles: role.toString(),
-          });
+            profileType: 'Client'
+          }, true);
           let typeAdress = await this.typeService.findTypeByCodeJust('DomicilioReal')
           clientData.clientAddress[0].address['addressType'] = typeAdress
           const client = this.clientRepository.create({

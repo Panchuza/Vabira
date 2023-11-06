@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, Req, Headers, } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Req, Headers, Query, } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from 'src/users/users.service';
 import { UserRoleGuard } from './guard/user-role.guard';
@@ -9,6 +9,7 @@ import { User } from 'src/entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { IncomingHttpHeaders } from 'http';
 import { AuthService } from './auth.service';
+import { EmailDto } from './dto/email.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -19,12 +20,22 @@ export class AuthController {
 
   @Post('login')
   loginUser(@Body() loginUserDto: LoginDto) {
-    return this.userService.login(loginUserDto);
+    return this.authService.loginUser(loginUserDto);
   }
 
   @Post('verify-token')
   async verifyToken(@Body() { token }: { token: string }) {
     return this.authService.checkToken(token);
+  }
+
+  @Post('sendEmail')
+  sendEmail(@Body() emailDto: EmailDto){
+    return this.authService.sendEmailCode(emailDto)
+  }
+
+  @Get('validateCode')
+  validateCode(@Query('codigoGenerado') codigoGenerado: string, @Query('codigoIngresado') codigoIngresado: string){
+    return this.authService.validateCode(codigoGenerado, codigoIngresado)
   }
 
   @Get('check-status')

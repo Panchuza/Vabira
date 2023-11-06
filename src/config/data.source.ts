@@ -2,7 +2,7 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 import * as dotenv from "dotenv";
 import { resolve } from "path";
-import { Accesses } from "src/entities/accesses.entity";
+import { Access } from "src/entities/access.entity";
 import { AccessProfile } from "src/entities/accessProfile.entity";
 import { Alert } from "src/entities/alert.entity";
 import { Client } from "src/entities/client.entity";
@@ -50,7 +50,7 @@ export const Config: DataSourceOptions = {
   username: process.env.DATABASE_USER,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  entities: [Accesses, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Region, Report
+  entities: [Access, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Region, Report
     , SaleRecord, Schedule, Sign, SignStatus, Supplier, SupplierStatus, Turn, Turnero
 , TurnStatus, Type, TypeConfig, User],
   migrations: ["dist/src/migrations/*{.ts,.js}"],
