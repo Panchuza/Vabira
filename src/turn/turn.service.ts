@@ -193,6 +193,11 @@ export class TurnService {
     return turnTypeStatus
   }
 
+  async validateTypeTurnStatus3() {
+    const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoPresente')
+    return turnTypeStatus
+  }
+
   async assignTurn(updateTurnDto: UpdateTurnDto) {
     const turn = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
@@ -232,6 +237,45 @@ export class TurnService {
     throw new BadRequestException('El turno solicitado ya esta registrado')
   }
 
+  async aproveTurn(updateTurnDto: UpdateTurnDto) {
+    const turn = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
+      .addSelect('client.id')
+      .addSelect('schedule.id')
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('Turn.schedule', 'schedule')
+      .where('Turn.id = :id', { id: updateTurnDto.id })
+      .getOne()
+    const newTurnStatus = new TurnStatus()
+    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
+    newTurnStatus.turnStatusType = await this.validateTypeTurnStatus3()
+    newTurnStatus.turn = turn
+    
+    if (!turn.client) {
+      try {
+        let turnResult: any
+        await this.entityManager.transaction(async (transaction) => {
+          try {
+            turn.client = updateTurnDto.client
+            await this.turnStatusRepository.save(newTurnStatus);
+            turnResult = await transaction.save(turn);
+          } catch (error) {
+            console.log(error);
+            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+        });
+        return {
+          status: HttpStatus.OK,
+          data: turnResult,
+        }
+      } catch (error) {
+        console.log(error);
+        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+    throw new BadRequestException('El turno solicitado ya esta aprobado')
+  }
+
   async unAssignTurn(updateTurnDto: UpdateTurnDto) {
     const client = await this.clientRepository.findOne({ where: { id: updateTurnDto.client.id } })
     const turnAssignedSelect = await this.turnRepository.findOne({ where: { client: client as any, id: updateTurnDto.id } })
@@ -265,6 +309,62 @@ export class TurnService {
       throw new BadRequestException('El turno no corresponde al cliente logueado')
     }
   }
+
+  async fillTurns(idSchedule: number) {
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
+      .where('Schedule.id = :id', { id: idSchedule })
+      .getMany();
+  
+    // Filtrar los turnos reservados
+    const reservedTurns2 = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Reservado');
+  
+    // Calcular la cantidad de turnos en total
+    const totalTurns = turns.length;
+  
+    // Calcular la cantidad de turnos cuyo último estado es "TurnoReservado"
+    const reservedTurns = reservedTurns2.length;
+  
+    // Calcular la cantidad de turnos cuyo último estado es "TurnoDisponible"
+    const availableTurns = totalTurns - reservedTurns;
+  
+    return {
+      totalTurns,
+      reservedTurns,
+      availableTurns,
+      reservedTurns2,
+    };
+  }
+  
 
   private padTo2Digits(num: number) {
     return num.toString().padStart(2, '0');
