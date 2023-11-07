@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -65,8 +65,26 @@ export class ClientService {
     return `This action returns all client`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} client`;
+  // findOne(id: number) {
+  //   return `This action returns a #${id} client`;
+  // }
+
+  async findOneUserId(id: number) {
+    const client = await this.clientRepository.createQueryBuilder('Client')
+      .select(['Client.id', 'Client.User_Id'])
+      .where('Client.User_Id = :id', { id: id })
+      .getOne()
+    if (!client) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe un cliente con el id ${id} ingresado o esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return client;
+    }
   }
 
   update(id: number, updateClientDto: UpdateClientDto) {
