@@ -22,6 +22,7 @@ import { ContinentModule } from './continent/continent.module';
 import { RegionModule } from './region/region.module';
 import { ProductModule } from './product/product.module';
 import { FaqModule } from './faq/faq.module';
+import { SaleRecordModule } from './sale-record/sale-record.module';
 
 
 const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
@@ -57,6 +58,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
     RegionModule,
     ProductModule,
     FaqModule,
+    SaleRecordModule,
   ],
   controllers: [AppController],
   providers: [AppService,

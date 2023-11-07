@@ -33,7 +33,7 @@ export class ProductService {
         productDto.description = toCreate.description
         productDto.prize = toCreate.prize
         productDto.quantity = toCreate.quantity
-        productDto.stock = toCreate.stock
+        // productDto.stock = toCreate.stock
         productDto.caducityDatetime = toCreate.caducityDatetime
 
         let result: Product

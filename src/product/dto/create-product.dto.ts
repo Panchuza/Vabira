@@ -21,8 +21,8 @@ export class CreateProductDto {
     @IsNotEmpty()
     quantity: number
 
-    @IsNotEmpty()
-    stock: number
+    // @IsNotEmpty()
+    // stock: number
 
     @IsNotEmpty()
     caducityDatetime: string

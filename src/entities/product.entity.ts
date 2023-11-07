@@ -28,7 +28,7 @@ export class Product {
    @Column({ name: 'Prize', type: 'decimal', precision: 8, scale: 2, nullable: true })
    prize: number
 
-   @Column({ name: 'Stock' })
+   @Column({ name: 'Stock', nullable: true })
    stock: number
 
    @Column({ name: 'CaducityDatetime', type: 'date' })
@@ -47,8 +47,8 @@ export class Product {
    @OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.product)
    purchaseRecord: PurchaseRecord;
 
-   @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.product)
-   saleRecord: SaleRecord;
+   // @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.product)
+   // saleRecord: SaleRecord;
 
 
 }

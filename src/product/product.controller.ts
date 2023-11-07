@@ -9,29 +9,33 @@ export class ProductController {
   constructor(
     private readonly productService: ProductService,
     private readonly authService: AuthService,
-    ) {}
+  ) { }
 
   @Post('create')
-  create(@Body() createProductDto: CreateProductDto, 
-  @Headers('authorization') token: string,) {
-    if (!token) {
-      throw new HttpException(
-        'Token no proporcionado',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    const access: any[] = this.authService.validateAccess(token);
-
-    if (access.includes('Crear Producto')) {
-      return this.productService.create(createProductDto);
-    } else {
-      throw new HttpException(
-        'No tenés acceso a esta operación',
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-    
+  create(@Body() createProductDto: CreateProductDto) {
+    return this.productService.create(createProductDto);
   }
+  // @Post('create')
+  // create(@Body() createProductDto: CreateProductDto, 
+  // @Headers('authorization') token: string,) {
+  //   if (!token) {
+  //     throw new HttpException(
+  //       'Token no proporcionado',
+  //       HttpStatus.UNAUTHORIZED,
+  //     );
+  //   }
+  //   const access: any[] = this.authService.validateAccess(token);
+
+  //   if (access.includes('Crear Producto')) {
+  //     return this.productService.create(createProductDto);
+  //   } else {
+  //     throw new HttpException(
+  //       'No tenés acceso a esta operación',
+  //       HttpStatus.UNAUTHORIZED,
+  //     );
+  //   }
+
+  // }
 
   @Get('all')
   findAll() {
