@@ -25,11 +25,11 @@ export class Turn {
     @OneToOne(() => Report, (report) => report.turn)
 	report: Report;
 
-    @ManyToOne(() => Schedule, (schedule) => schedule.turn)
+    @ManyToOne(() => Schedule, (schedule) => schedule.turn, {orphanedRowAction: 'delete'})
     @JoinColumn({ name: 'Schedule_Id' })
 	schedule: Schedule;
 
-    @OneToMany(() => TurnStatus, (turnStatus) => turnStatus.turn)
+    @OneToMany(() => TurnStatus, (turnStatus) => turnStatus.turn, {cascade: true})
     turnStatus: TurnStatus[]
 
     @ManyToOne(() => Client, (client) => client.turn)

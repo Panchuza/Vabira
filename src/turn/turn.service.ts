@@ -251,12 +251,11 @@ export class TurnService {
     newTurnStatus.turnStatusType = await this.validateTypeTurnStatus3()
     newTurnStatus.turn = turn
     
-    if (!turn.client) {
+    if (turn.client) {
       try {
         let turnResult: any
         await this.entityManager.transaction(async (transaction) => {
           try {
-            turn.client = updateTurnDto.client
             await this.turnStatusRepository.save(newTurnStatus);
             turnResult = await transaction.save(turn);
           } catch (error) {

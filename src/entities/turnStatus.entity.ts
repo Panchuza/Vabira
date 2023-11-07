@@ -9,7 +9,7 @@ export class TurnStatus {
   @PrimaryGeneratedColumn('increment', { name: 'Id' })
   id: number;
 
-  @ManyToOne(() => Turn, (turn) => turn.turnStatus)
+  @ManyToOne(() => Turn, (turn) => turn.turnStatus, {orphanedRowAction: 'delete'})
   @JoinColumn({ name: 'Turn_Id' })
   turn: Turn;
 

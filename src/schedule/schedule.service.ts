@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -143,6 +143,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
       .leftJoin('Schedule.supplier', 'Supplier')
       .leftJoin('Supplier.user', 'User')
+      .where('Schedule.active = 1')
       .getMany()
     return schedule;
   }
@@ -167,6 +168,24 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       }));
     }
     return schedule;
+  }
+
+  async remove(updateScheduleDto: UpdateScheduleDto) {
+    const schedule = await this.scheduleRepository.findOne({where: {id: updateScheduleDto.id}})
+    if (!schedule) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe una agenda con el id ${updateScheduleDto.id} ingresado o ya esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      schedule.active = false
+      this.scheduleRepository.save(schedule)
+      return schedule;
+    }
+
   }
 
   private padTo2Digits(num: number) {

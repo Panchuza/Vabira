@@ -55,7 +55,7 @@ export const Config: DataSourceOptions = {
 , TurnStatus, Type, TypeConfig, User],
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   migrationsRun: false,
-  synchronize: false,
+  synchronize: true,
   connectionTimeout: 60000,
   requestTimeout: 90000,
   extra: {

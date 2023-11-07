@@ -24,7 +24,7 @@ export class Schedule {
     @Column({ name: 'HasSign', type: 'bit', nullable: true })
     hasSign: boolean;
 
-    @OneToMany(() => Turn, (turn) => turn.schedule)
+    @OneToMany(() => Turn, (turn) => turn.schedule, {cascade: true})
     turn: Turn[]
 
     @ManyToOne(() => Supplier, (supplier) => supplier.schedule)
@@ -34,5 +34,6 @@ export class Schedule {
     @ManyToOne(() => Turnero, (turnero) => turnero.schedule)
     turnero: Turnero;
 
-
+    @Column({ name: 'Active', type: 'bit', nullable: true })
+    active: boolean
 }
