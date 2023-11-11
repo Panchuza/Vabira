@@ -23,6 +23,7 @@ import { RegionModule } from './region/region.module';
 import { ProductModule } from './product/product.module';
 import { FaqModule } from './faq/faq.module';
 import { SaleRecordModule } from './sale-record/sale-record.module';
+import { PurchaseRecordModule } from './purchase-record/purchase-record.module';
 
 
 const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
@@ -59,6 +60,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
     ProductModule,
     FaqModule,
     SaleRecordModule,
+    PurchaseRecordModule,
   ],
   controllers: [AppController],
   providers: [AppService,

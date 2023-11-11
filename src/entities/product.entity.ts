@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { PurchaseRecord } from "./purchaseRecord.entity";
 import { SaleRecord } from "./saleRecord.entity";
@@ -25,6 +25,9 @@ export class Product {
    @Column({ name: 'Quantity' })
    quantity: number
 
+   @Column({ name: 'CodeForBatch' })
+   codeForBatch: number
+
    @Column({ name: 'Prize', type: 'decimal', precision: 8, scale: 2, nullable: true })
    prize: number
 
@@ -44,7 +47,8 @@ export class Product {
    @JoinColumn({ name: 'Product_Type_Id' })
    productType: Type
 
-   @OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.product)
+   @ManyToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.product)
+   @JoinColumn({ name: 'PurchaseRecord_Id' })
    purchaseRecord: PurchaseRecord;
 
    // @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.product)

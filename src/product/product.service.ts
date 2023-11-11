@@ -5,6 +5,7 @@ import { EntityManager, Repository } from 'typeorm';
 import { Product } from 'src/entities/product.entity';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { DbException } from 'src/exception/dbException';
+import { PurchaseRecord } from 'src/entities/purchaseRecord.entity';
 
 @Injectable()
 export class ProductService {
@@ -18,52 +19,62 @@ export class ProductService {
 
 
   async create(createProductDto: CreateProductDto) {
-
-    const { code, ...toCreate } = createProductDto
-
+    const { code, quantity, ...toCreate } = createProductDto;
+    const createdProducts: Product[] = [];
+  
     try {
-      if (!(await this.validateCode(code))) {
+      // Obtén el último valor de codeForBatch
+      const lastBatch = await this.productRepository.createQueryBuilder('product')
+        .select('MAX(product.codeForBatch)', 'lastBatch')
+        .getRawOne();
+  
+      const lastBatchValue = lastBatch ? lastBatch.lastBatch || 0 : 0;
+  
+      for (let i = 0; i < quantity; i++) {
         const productDto = await this.productRepository.create({
-          code,
-          ...toCreate
-        })
-        productDto.name = toCreate.name
-        productDto.code = code
-        productDto.brand = toCreate.brand
-        productDto.description = toCreate.description
-        productDto.prize = toCreate.prize
-        productDto.quantity = toCreate.quantity
-        // productDto.stock = toCreate.stock
-        productDto.caducityDatetime = toCreate.caducityDatetime
-
-        let result: Product
-        await this.entityManager.transaction(async (transaction) => {
-          try {
-            result = await transaction.save(productDto)
-
-          } catch (error) {
-            console.log(error);
-            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        })
-        return {
-          status: HttpStatus.CREATED,
-          data: result,
-        }
-      } else {
-        return new HttpException(
-          {
-            status: HttpStatus.BAD_REQUEST,
-            error: 'Ya existe un producto con el codigo ingresado',
-          },
-          HttpStatus.BAD_REQUEST,
-        );
+          code: code + i,
+          codeForBatch: lastBatchValue + 1, 
+          quantity: quantity,
+          ...toCreate,
+        });
+        createdProducts.push(productDto);
       }
+  
+      let results: Product[] = [];
+      await this.entityManager.transaction(async (transaction) => {
+        try {
+          // Guarda todos los productos en una transacción
+          results = await transaction.save(createdProducts);
+  
+          // Crea una nueva orden de compra
+          const orderRecord = transaction.create(PurchaseRecord);
+  
+          orderRecord.purchaseAmount = quantity * toCreate.prize;
+  
+          // Guarda la orden de compra
+          await transaction.save(orderRecord);
+  
+          // Asigna PurchaseRecord_Id a cada producto creado
+          for (const product of results) {
+            product.purchaseRecord = orderRecord;
+            await transaction.save(Product, product);
+          }
+        } catch (error) {
+          console.log(error);
+          throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+      });
+  
+      return {
+        status: HttpStatus.CREATED,
+        data: results,
+      };
     } catch (error) {
       console.log(error);
       throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  
 
   async validateCode(code: string) {
     const productFound = await this.productRepository.findOne({ where: { code: code } })
@@ -72,10 +83,41 @@ export class ProductService {
 
   async findAll() {
     const products = await this.productRepository.createQueryBuilder('Product')
-      .select(['Product.id', 'Product.name', 'Product.brand', 'Product.code', 'Product.quantity', 'Product.prize', 'Product.description'])
+      .select(['Product.id', 'Product.name', 'Product.brand', 'Product.code', 'Product.quantity', 'Product.prize', 'Product.description', 'Product.codeForBatch'])
       .getMany();
     return products
   }
+
+  async findAll2() {
+    const query = `
+      SELECT "Product"."Id" AS "Product_Id", "Product"."Name" AS "Product_Name",
+             "Product"."Code" AS "Product_Code", "Product"."Brand" AS "Product_Brand",
+             "Product"."Description" AS "Product_Description", "Product"."Quantity" AS "Product_Quantity",
+             "Product"."CodeForBatch" AS "Product_CodeForBatch", "Product"."Prize" AS "Product_Prize"
+      FROM "Product" "Product"
+      WHERE "Product"."Id" NOT IN (
+        SELECT MIN("P2"."Id")
+        FROM "Product" "P2"
+        WHERE "P2"."CodeForBatch" = "Product"."CodeForBatch"
+      )`;
+  
+    const products = await this.productRepository.query(query);
+  
+    // Agrupar productos por codeForBatch
+    const productsByCodeForBatch = {};
+  
+    for (const product of products) {
+      const codeForBatch = product.Product_CodeForBatch;
+      if (!productsByCodeForBatch[codeForBatch]) {
+        productsByCodeForBatch[codeForBatch] = [];
+      }
+      productsByCodeForBatch[codeForBatch].push(product);
+    }
+  
+    return productsByCodeForBatch;
+  }
+  
+  
 
   findOne(id: number) {
     return `This action returns a #${id} product`;
@@ -89,15 +131,38 @@ export class ProductService {
     const product = await this.productRepository.findOne({ where: { id: updateProductDto.id } })
     
     if (product) {
-      await this.productRepository.remove(product)
+      // Obtén el codeForBatch del producto antes de eliminarlo
+      const codeForBatch = product.codeForBatch;
+  
+      // Elimina el producto de la base de datos
+      await this.productRepository.remove(product);
+  
+      // Actualiza la cantidad de productos con el mismo codeForBatch
+      await this.decreaseQuantityForBatch(codeForBatch);
     } else {
       return new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
-          error: `No existe un producto con el id ${product.id} ingresado o ya esta dado de baja`,
+          error: `No existe un producto con el id ${product.id} ingresado o ya está dado de baja`,
         },
         HttpStatus.NOT_FOUND,
       );
     }
   }
+  
+  // Método para disminuir en 1 la cantidad de productos con el mismo codeForBatch
+  private async decreaseQuantityForBatch(codeForBatch: number): Promise<void> {
+    const productsWithSameBatch = await this.productRepository.find({
+      where: { codeForBatch: codeForBatch },
+    });
+  
+    for (const product of productsWithSameBatch) {
+      // Asegúrate de que la cantidad no sea menor que cero
+      product.quantity = Math.max(0, product.quantity - 1);
+  
+      // Guarda los cambios en la base de datos
+      await this.productRepository.save(product);
+    }
+  }
+  
 }

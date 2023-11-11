@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { Product } from "./product.entity";
 import { Supplier } from "./supplier.entity";
@@ -24,11 +24,34 @@ export class PurchaseRecord {
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier;
 
-    @OneToOne(() => Product, (product) => product.purchaseRecord)
-    @JoinColumn({ name: 'Product_Id' })
-    product: Product;
+    @OneToMany(() => Product, (product) => product.purchaseRecord)
+    product: Product[];
 
     @OneToOne(() => Receipt, (receipt) => receipt.purchaseRecord)
 	receipt: Receipt;
 
+    @BeforeInsert()
+	insertRegistraionDate() {
+		this.purchaseDateTime = this.formatDate(new Date())
+	}
+
+    private padTo2Digits(num: number) {
+		return num.toString().padStart(2, '0');
+	}
+
+	private formatDate(date: Date) {
+		return (
+			[
+				date.getFullYear(),
+				this.padTo2Digits(date.getMonth() + 1),
+				this.padTo2Digits(date.getDate()),
+			].join('-') +
+			' ' +
+			[
+				this.padTo2Digits(date.getHours()),
+				this.padTo2Digits(date.getMinutes()),
+				this.padTo2Digits(date.getSeconds()),
+			].join(':')
+		);
+	}
 }
