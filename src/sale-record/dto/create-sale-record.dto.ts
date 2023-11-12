@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsObject } from "class-validator"
+import { IsArray, IsNotEmpty, IsObject } from "class-validator"
 import { Type as Typet } from "class-transformer"
 import { AssignDto } from "src/common/dtos/assign.dto";
+import { Product } from "src/entities/product.entity";
 
 export class CreateSaleRecordDto {
 
@@ -20,6 +21,9 @@ export class CreateSaleRecordDto {
 
     @IsNotEmpty()
     saleDateTime: string
+
+    @IsArray()
+    product: Product[]
 
 
 }

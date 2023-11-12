@@ -28,6 +28,16 @@ export class TurnController {
     return this.turnService.findNotAssignTurnsForSchedule(scheduleId);
   }
 
+  @Get('findDesaproveTurnsForSchedule')
+  findDesaproveTurnsForSchedule(@Query('scheduleId') scheduleId: string) {
+    return this.turnService.findDesaproveTurnsForSchedule(scheduleId);
+  }
+
+  @Get('findAproveTurnsForSchedule')
+  findAproveTurnsForSchedule(@Query('scheduleId') scheduleId: string) {
+    return this.turnService.findAproveTurnsForSchedule(scheduleId);
+  }
+
   @Patch('assignTurn')
   assignTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.assignTurn(updateTurnDto);

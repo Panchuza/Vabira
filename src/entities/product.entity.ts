@@ -52,8 +52,8 @@ export class Product {
    @JoinColumn({ name: 'PurchaseRecord_Id' })
    purchaseRecord: PurchaseRecord;
 
-   // @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.product)
-   // saleRecord: SaleRecord;
+   @ManyToOne(() => SaleRecord, (saleRecord) => saleRecord.product)
+   saleRecord: SaleRecord;
 
 
 }
