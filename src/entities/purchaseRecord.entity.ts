@@ -3,7 +3,6 @@ import { Type } from "./type.entity";
 import { Product } from "./product.entity";
 import { Supplier } from "./supplier.entity";
 import { Client } from "./client.entity";
-import { Receipt } from "./receipt.entity";
 
 @Entity('PurchaseRecord')
 export class PurchaseRecord {
@@ -27,8 +26,6 @@ export class PurchaseRecord {
     @OneToMany(() => Product, (product) => product.purchaseRecord)
     product: Product[];
 
-    @OneToOne(() => Receipt, (receipt) => receipt.purchaseRecord)
-	receipt: Receipt;
 
     @BeforeInsert()
 	insertRegistraionDate() {

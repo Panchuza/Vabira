@@ -183,6 +183,109 @@ export class TurnService {
 
     return formattedTurns;
   }
+  async findAproveTurnsForSchedule(scheduleId: string) {
+    const status = await this.validateTypeTurnStatus3()
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
+      .where('turnStatusType.id = :status', { status: status.id })
+      .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
+      .getMany()
+
+
+    // if (turns.length === 0) {
+    //   throw new BadRequestException('No existen turnos disponibles');
+    // }
+
+    const formattedTurns = turns.map(turn => ({
+      ...turn,
+      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
+      dateTo: moment(turn.dateTo).format('hh:mm A'),
+      monthDay: moment(turn.dateFrom).format('DD/MM'),
+    }));
+
+    return formattedTurns;
+  }
+
+  async findDesaproveTurnsForSchedule(scheduleId: string) {
+    const status = await this.validateTypeTurnStatus4()
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
+      .where('turnStatusType.id = :status', { status: status.id })
+      .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
+      .getMany()
+
+
+    // if (turns.length === 0) {
+    //   throw new BadRequestException('No existen turnos disponibles');
+    // }
+
+    const formattedTurns = turns.map(turn => ({
+      ...turn,
+      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
+      dateTo: moment(turn.dateTo).format('hh:mm A'),
+      monthDay: moment(turn.dateFrom).format('DD/MM'),
+    }));
+
+    return formattedTurns;
+  }
 
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
@@ -399,25 +502,27 @@ export class TurnService {
       .where('Schedule.id = :id', { id: idSchedule })
       .getMany();
   
-    // Filtrar los turnos reservados
-    const reservedTurns2 = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Reservado');
+    // Filtrar los turnos reservados, aprobados y desaprobados
+    const reservedTurns = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Reservado').length;
+    const aproveTurns = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Presente').length;
+    const desaproveTurns = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Ausente').length;
   
     // Calcular la cantidad de turnos en total
     const totalTurns = turns.length;
   
     // Calcular la cantidad de turnos cuyo último estado es "TurnoReservado"
-    const reservedTurns = reservedTurns2.length;
-  
-    // Calcular la cantidad de turnos cuyo último estado es "TurnoDisponible"
-    const availableTurns = totalTurns - reservedTurns;
+    const availableTurns = totalTurns - reservedTurns - aproveTurns - desaproveTurns;
   
     return {
       totalTurns,
       reservedTurns,
       availableTurns,
-      reservedTurns2,
+      reservedTurns2: turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Reservado'),
+      aproveTurns,
+      desaproveTurns
     };
   }
+  
   
 
   private padTo2Digits(num: number) {
