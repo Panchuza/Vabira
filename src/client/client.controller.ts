@@ -12,7 +12,7 @@ export class ClientController {
     return this.clientService.create(createClientDto);
   }
 
-  @Get()
+  @Get('all')
   findAll() {
     return this.clientService.findAll();
   }
@@ -23,11 +23,20 @@ export class ClientController {
   // }
 
   @Get('/findOneUserId')
-  findOne(@Query('id') id: string) {
+  findOne2(@Query('id') id: string) {
     return this.clientService.findOneUserId(+id);
   }
 
   
+  @Get('findOne')
+  findOne(@Query('id') id: string) {
+    return this.clientService.findOne(+id);
+  }
+
+  @Get('findOneClientByEmail')
+  findOneClientByEmail(@Query('email') email: string) {
+    return this.clientService.findOneClientByEmail(email);
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateClientDto: UpdateClientDto) {

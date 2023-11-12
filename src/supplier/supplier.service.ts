@@ -6,6 +6,7 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { DbException } from 'src/exception/dbException';
 import { Supplier } from 'src/entities/supplier.entity';
+import { Profiles } from 'src/entities/profile.entity';
 
 @Injectable()
 export class SupplierService {
@@ -14,6 +15,8 @@ export class SupplierService {
     private readonly userService: UsersService,
     @InjectRepository(Supplier)
     private readonly supplierRepository: Repository<Supplier>,
+    @InjectRepository(Profiles)
+    private readonly profileRepository: Repository<Profiles>,
     @InjectEntityManager()
     private entityManager: EntityManager,
   ) { }
@@ -23,21 +26,12 @@ export class SupplierService {
 
     let role: any = ['user', 'supplier'];
     let supplierUser: any;
-
     try {
       let supplierResult: any
       await this.entityManager.transaction(async (transaction) => {
         try {
-          supplierUser = await this.userService.create({
-            firstName,
-            lastName,
-            dateOfBirth,
-            username,
-            email,
-            dni,
-            password,
-            roles: role.toString(),
-          });
+          supplierUser = await this.userService.create({firstName,lastName,dateOfBirth,username,email,dni,password, 
+            roles: role.toString(), profileType: 'Supplier'}, true);
 
           const supplier = this.supplierRepository.create({
             ...supplierData,
@@ -62,7 +56,7 @@ export class SupplierService {
   async findAll() {
     const users = await this.supplierRepository.createQueryBuilder('Supplier')
       .select(['Supplier.id', 'Supplier.identificationNumber', 'Supplier.cuit'])
-      .addSelect(['User.firstName', 'User.lastName', 'User.dni', 'User.dateOfBirth', 'User.active'])
+      .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.dateOfBirth', 'User.active'])
       .leftJoin('Supplier.user', 'User')
       .where('User.active = 1')
       .getMany()
@@ -70,23 +64,44 @@ export class SupplierService {
   }
 
   async findOne(id: number) {
-    const user = await this.supplierRepository.createQueryBuilder('Supplier')
+    const supplier = await this.supplierRepository.createQueryBuilder('Supplier')
       .select(['Supplier.id', 'Supplier.identificationNumber', 'Supplier.cuit'])
-      .addSelect(['User.firstName', 'User.lastName', 'User.dni', 'User.dateOfBirth', 'User.active'])
+      .addSelect(['User.username', 'User.firstName', 'User.lastName', 'User.dni', 'User.dateOfBirth', 'User.active'])
       .leftJoin('Supplier.user', 'User')
       .where('Supplier.id = :id', { id: id })
       .andWhere('User.active = 1')
       .getOne()
-    if (!user) {
+    if (!supplier) {
       return new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
-          error: `No existe un usuario con el id ${id} ingresado o esta dado de baja`,
+          error: `No existe un proveedor con el id ${id} ingresado o esta dado de baja`,
         },
         HttpStatus.NOT_FOUND,
       );
     } else {
-      return user;
+      return supplier;
+    }
+  }
+
+  async findOneSupplierByEmail(email: string) {
+    const supplier = await this.supplierRepository.createQueryBuilder('Supplier')
+      .select(['Supplier.id', 'Supplier.identificationNumber', 'Supplier.cuit'])
+      .addSelect(['User.username', 'User.firstName', 'User.email', 'User.lastName', 'User.dni', 'User.dateOfBirth', 'User.active'])
+      .leftJoin('Supplier.user', 'User')
+      .where('User.email = :email', { email: email })
+      .andWhere('User.active = 1')
+      .getOne()
+    if (!supplier) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe un proveedor con el email ${email} ingresado o esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return supplier;
     }
   }
   

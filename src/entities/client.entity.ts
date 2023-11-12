@@ -10,46 +10,35 @@ import { Country } from './country.entity';
 
 @Entity('Client')
 export class Client {
-  @PrimaryGeneratedColumn('increment', { name: 'Id' })
-  id: number;
+	@PrimaryGeneratedColumn('increment', { name: 'Id' })
+	id: number;
 
-  @OneToOne(() => User, (user) => user.client, { cascade: true })
-  @JoinColumn({ name: 'User_Id' })
-  user: User;
+	@OneToOne(() => User, (user) => user.client, { cascade: true })
+	@JoinColumn({ name: 'User_Id' })
+	user: User;
 
-  @Column({ name: 'CreateDateTime', type: 'datetime', nullable: true })
+	@Column({ name: 'CreateDateTime', type: 'datetime', nullable: true })
 	createDateTime: string;
 
 	@Column({ name: 'UploadDateTime', type: 'datetime', nullable: true })
 	uploadDateTime: string;
 
-  @OneToOne(() => Country, (country) => country.clientOrigin)
-  @JoinColumn({ name: 'CountryOfOrigin_Id' })
-  countryOfOrigin: Country;
+	@OneToOne(() => ClientStatus, (clientStatus) => clientStatus.client)
+	clientStatus: ClientStatus[]
 
-  @OneToOne(() => Country, (country) => country.clientResidence)
-  @JoinColumn({ name: 'CountryOfResidence_Id' })
-  countryOfResidence: Country;
+	@OneToMany(() => Turn, (turn) => turn.client)
+	turn: Turn[]
 
-  @OneToOne(() => ClientStatus, (clientStatus) => clientStatus.client)
-  clientStatus: ClientStatus[]
+	@OneToOne(() => SaleRecord, (saleRecord) => saleRecord.client)
+	saleRecord: SaleRecord;
 
-  @OneToMany(() => Turn, (turn) => turn.client)
-  turn: Turn[]
+	@OneToMany(() => ClientAddress, (clientAddress) => clientAddress.client, { cascade: true, eager: true })
+	clientAddress: ClientAddress[]
 
-  @OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.client)
-  purchaseRecord: PurchaseRecord;
-
-  @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.client)
-  saleRecord: SaleRecord;
-
-  @OneToMany(() => ClientAddress, (clientAddress) => clientAddress.client, { cascade: true, eager: true })
-  clientAddress: ClientAddress[]
-
-  @BeforeInsert()
-    insertRegistraionDate() {
-        this.createDateTime = this.formatDate(new Date())
-    }
+	@BeforeInsert()
+	insertRegistraionDate() {
+		this.createDateTime = this.formatDate(new Date())
+	}
 
 	@BeforeUpdate()
 	private addUploadDate() {

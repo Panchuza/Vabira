@@ -27,4 +27,8 @@ export class ScheduleController {
     return this.scheduleService.findOne(+id);
   }
 
+  @Patch('/delete')
+  remove(@Body() updateScheduleDto: UpdateScheduleDto) {
+    return this.scheduleService.remove(updateScheduleDto);
+  }
 }

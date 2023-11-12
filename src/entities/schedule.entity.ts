@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { Supplier } from "./supplier.entity";
 import { Turn } from "./turn.entity";
@@ -24,15 +24,16 @@ export class Schedule {
     @Column({ name: 'HasSign', type: 'bit', nullable: true })
     hasSign: boolean;
 
-    @OneToMany(() => Turn, (turn) => turn.schedule)
+    @OneToMany(() => Turn, (turn) => turn.schedule, {cascade: true})
     turn: Turn[]
 
-    @OneToOne(() => Supplier, (supplier) => supplier.schedule)
+    @ManyToOne(() => Supplier, (supplier) => supplier.schedule)
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier;
 
-    @OneToOne(() => Turnero, (turnero) => turnero.schedule)
+    @ManyToOne(() => Turnero, (turnero) => turnero.schedule)
     turnero: Turnero;
 
-
+    @Column({ name: 'Active', type: 'bit', nullable: true })
+    active: boolean
 }

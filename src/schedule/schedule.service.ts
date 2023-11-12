@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +14,7 @@ import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { es } from 'date-fns/locale';
 import * as moment from 'moment';
+import { User } from 'src/entities/user.entity';
 
 
 @Injectable()
@@ -25,6 +26,8 @@ export class ScheduleService {
     private scheduleRepository: Repository<Schedule>,
     @InjectRepository(Supplier)
     private supplierRepository: Repository<Supplier>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     @InjectEntityManager()
     private entityManager: EntityManager,
     private readonly typeService: TypeService,
@@ -44,8 +47,8 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
   if (turnDuration > timeDiff) {
     throw new Error('La duración del turno excede el tiempo disponible.');
   }
-
-  const supplierFound = await this.supplierRepository.findOne({ where: { user: supplier?.id as any } });
+  const userFound = await this.userRepository.findOne({where: {id: supplier.id}})
+  const supplierFound = await this.supplierRepository.findOne({ where: { user: userFound as any} });
 
   const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
     const schedule = new Schedule();
@@ -55,6 +58,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
     schedule.initialTurnDateTime = startTime.toISOString();
     schedule.finalTurnDateTime = endTime.toISOString();
     schedule.supplier = supplierFound;
+    schedule.active = true;
     const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
 
     for (const selectedDate of dates) {
@@ -140,6 +144,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
       .leftJoin('Schedule.supplier', 'Supplier')
       .leftJoin('Supplier.user', 'User')
+      .where('Schedule.active = 1')
       .getMany()
     return schedule;
   }
@@ -164,6 +169,24 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
       }));
     }
     return schedule;
+  }
+
+  async remove(updateScheduleDto: UpdateScheduleDto) {
+    const schedule = await this.scheduleRepository.findOne({where: {id: updateScheduleDto.id}})
+    if (!schedule) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe una agenda con el id ${updateScheduleDto.id} ingresado o ya esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      schedule.active = false
+      this.scheduleRepository.save(schedule)
+      return schedule;
+    }
+
   }
 
   private padTo2Digits(num: number) {

@@ -19,9 +19,9 @@ export class SaleRecord {
     @Column({ name: 'Quantity', nullable: true })
     quantity: number
 
-    @OneToOne(() => Type)
-    @JoinColumn({ name: 'Product_Type_Id' })
-    productType: Type
+    // @OneToOne(() => Type)
+    // @JoinColumn({ name: 'Product_Type_Id' })
+    // productType: Type
 
     @OneToOne(() => Client, (client) => client.saleRecord)
     @JoinColumn({ name: 'Client_Id' })
@@ -31,11 +31,11 @@ export class SaleRecord {
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier;
 
-    @OneToOne(() => Product, (product) => product.saleRecord)
-    @JoinColumn({ name: 'Product_Id' })
-    product: Product;
+    // @OneToOne(() => Product, (product) => product.saleRecord)
+    // @JoinColumn({ name: 'Product_Id' })
+    // product: Product;
 
-    @OneToOne(() => Receipt, (receipt) => receipt.saleRecord)
-	receipt: Receipt;
+    // @OneToOne(() => Receipt, (receipt) => receipt.saleRecord)
+	// receipt: Receipt;
 
 }

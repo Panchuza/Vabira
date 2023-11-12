@@ -9,16 +9,19 @@ import { User } from 'src/entities/user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
 import * as dotenv from 'dotenv';
+import { EmailService } from 'src/email/email.service';
+import { Profiles } from 'src/entities/profile.entity';
+import { ProfileUser } from 'src/entities/profileUser.entity';
 dotenv.config();
 
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UsersService],
+  providers: [AuthService, JwtStrategy, UsersService, EmailService],
   imports: [
     ConfigModule,
-
-    TypeOrmModule.forFeature([User]),
+  
+    TypeOrmModule.forFeature([Profiles, ProfileUser, User]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
 

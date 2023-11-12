@@ -1,14 +1,17 @@
-import { Entity, ManyToMany, ManyToOne, PrimaryColumn } from "typeorm";
+import { Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Profiles } from "./profile.entity";
+import { Access } from "./access.entity";
 
 @Entity('AccessProfile')
 export class AccessProfile {
-   @PrimaryColumn({name: 'AccessId'})
-   access: number
+   @PrimaryGeneratedColumn('increment', {name: 'id'})
+   id: number
 
-   @PrimaryColumn({name: 'ProfileId'})
-   profile: number
+   @ManyToOne(()=> Profiles, (profile) => profile.accessProfile)
+   @JoinColumn({name: 'profile_Id'})
+   profile: Profiles
 
-   @ManyToOne(profile => Profiles, profile => profile.profileUser)
-   profiles: Profiles
+   @ManyToOne(() => Access, (access) => access.accessProfile)
+   @JoinColumn({name: 'access_Id'})
+   access: Access
 }

@@ -34,19 +34,16 @@ export class Supplier {
 	@Column({ name: 'UploadDateTime', type: 'datetime', nullable: true })
 	uploadDateTime: string;
 
-	@OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.supplier)
-	purchaseRecord: PurchaseRecord;
+	@OneToMany(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.supplier)
+	purchaseRecord: PurchaseRecord[];
 
 	@OneToOne(() => SaleRecord, (saleRecord) => saleRecord.supplier)
 	saleRecord: SaleRecord;
 
-	@OneToOne(() => Turn, (turn) => turn.supplier)
-	turn: Turn;
-
 	@OneToOne(() => Turnero, (turnero) => turnero.supplier)
 	turnero: Turnero;
 
-	@OneToOne(() => Schedule, (schedule) => schedule.supplier)
+	@OneToMany(() => Schedule, (schedule) => schedule.supplier)
 	schedule: Schedule
 
 	@OneToMany(() => SupplierStatus, (supplierStatus) => supplierStatus.supplier, { cascade: true, eager: true })

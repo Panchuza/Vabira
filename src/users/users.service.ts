@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -9,6 +9,8 @@ import { DbException } from 'src/exception/dbException';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from 'src/auth/dto/login.dto';
 import { JwtPayload } from 'src/auth/interfaces';
+import { Profiles } from 'src/entities/profile.entity';
+import { ProfileUser } from 'src/entities/profileUser.entity';
 
 
 @Injectable()
@@ -18,17 +20,46 @@ export class UsersService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Profiles)
+    private profileRepository: Repository<Profiles>,
+    @InjectRepository(ProfileUser)
+    private profileUserRepository: Repository<ProfileUser>,
     private jwtService: JwtService,
     @InjectEntityManager()
     private entityManager: EntityManager,
 
   ) { }
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, validationCode: boolean) {
+    if (validationCode == false) {
+      throw new BadRequestException('El código verificador es incorrecto');
+    }
 
-    const { username, email, dni, dateOfBirth, password, roles, ...toCreate } = createUserDto;
+    const { username, email, dni, dateOfBirth, password, roles, profileType, ...toCreate } = createUserDto;
 
     let role: any = createUserDto.roles
+
+    let profile;
+    if (profileType == 'Client') {
+      profile = await this.profileRepository.findOne({
+        where: { name: 'Client' },
+      });
+    }
+    if (profileType == 'Admin') {
+      profile = await this.profileRepository.findOne({
+        where: { name: 'Admin' },
+      });
+    }
+    if (profileType == 'User') {
+      profile = await this.profileRepository.findOne({
+        where: { name: 'User' },
+      });
+    }
+    if (profileType == 'Supplier') {
+      profile = await this.profileRepository.findOne({
+        where: { name: 'Supplier' },
+      });
+    }
 
     try {
       const isValid = await this.validation(username, email, dni);
@@ -37,6 +68,12 @@ export class UsersService {
           ...toCreate,
           password: bcrypt.hashSync(password, 10)
         });
+
+        const userProfile = this.profileUserRepository.create({
+          profile: profile
+        });
+
+        userDto.profileUser = [userProfile];
 
         userDto.username = username
         userDto.email = email
@@ -257,7 +294,11 @@ if (updateUserDto.password) {
       ...updateUserDto,
       
     });
-
+    let newPass = null
+    if (updateUserDto?.password) {
+      newPass = bcrypt.hashSync(updateUserDto.password, 10)
+      updatedUser.password = newPass;
+    }
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
       try {

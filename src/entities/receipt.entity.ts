@@ -17,8 +17,8 @@ export class Receipt {
     @JoinColumn({ name: 'PurchaseRecord_Id' })
     purchaseRecord: PurchaseRecord;
 
-    @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.receipt)
-    @JoinColumn({ name: 'SaleRecord_Id' })
-    saleRecord: SaleRecord;
+    // @OneToOne(() => SaleRecord, (saleRecord) => saleRecord.receipt)
+    // @JoinColumn({ name: 'SaleRecord_Id' })
+    // saleRecord: SaleRecord;
 
 }

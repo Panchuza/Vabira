@@ -18,6 +18,11 @@ export class TurnController {
     return this.turnService.findAssignTurnsForSchedule(scheduleId);
   }
 
+  @Get('fillTurns')
+  fillTurns(@Query('idSchedule') idSchedule: number) {
+    return this.turnService.fillTurns(idSchedule);
+  }
+
   @Get('findNotAssignTurnsForSchedule')
   findNotAssignTurnsForSchedule(@Query('scheduleId') scheduleId: string) {
     return this.turnService.findNotAssignTurnsForSchedule(scheduleId);
@@ -26,6 +31,21 @@ export class TurnController {
   @Patch('assignTurn')
   assignTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.assignTurn(updateTurnDto);
+  }
+
+  @Patch('aproveTurn')
+  aproveTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.aproveTurn(updateTurnDto);
+  }
+
+  @Patch('desaproveTurn')
+  desaproveTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.desaproveTurn(updateTurnDto);
+  }
+
+  @Patch('unAssignTurn')
+  unAssignTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.unAssignTurn(updateTurnDto);
   }
 
 }

@@ -2,37 +2,36 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 import * as dotenv from "dotenv";
 import { resolve } from "path";
-import { Accesses } from "../entities/accesses.entity";
-import { AccessProfile } from "../entities/accessProfile.entity";
-import { Alert } from "../entities/alert.entity";
-import { Client } from "../entities/client.entity";
-import { ClientStatus } from "../entities/clientStatus.entity";
-import { Faq } from "../entities/faq.entity";
-import { Product } from "../entities/product.entity";
-import { Profiles } from "../entities/profile.entity";
-import { ProfileUser } from "../entities/profileUser.entity";
-import { PurchaseRecord } from "../entities/purchaseRecord.entity";
-import { Receipt } from "../entities/receipt.entity";
-import { Report } from "../entities/report.entity";
-import { SaleRecord } from "../entities/saleRecord.entity";
-import { Schedule } from "../entities/schedule.entity";
-import { ScheduleDay } from "../entities/scheduleDay.entity";
-import { Sign } from "../entities/sign.entity";
-import { SignStatus } from "../entities/signStatus.entity";
-import { Supplier } from "../entities/supplier.entity";
-import { SupplierStatus } from "../entities/supplierStatus.entity";
-import { Turn } from "../entities/turn.entity";
-import { Turnero } from "../entities/turnero.entity";
-import { TurnStatus } from "../entities/turnStatus.entity";
-import { Type } from "../entities/type.entity";
-import { TypeConfig } from "../entities/typeConfig.entity";
-import { User } from "../entities/user.entity";
-import { Address } from "../entities/address.entity";
-import { ClientAddress } from "../entities/clientAddress.entity";
-import { Continent } from "../entities/continent.entity";
-import { Country } from "../entities/country.entity";
-import { PoliticalDivision } from "../entities/politicalDivision.entity";
-import { Region } from "../entities/region.entity";
+import { Access } from "src/entities/access.entity";
+import { AccessProfile } from "src/entities/accessProfile.entity";
+import { Alert } from "src/entities/alert.entity";
+import { Client } from "src/entities/client.entity";
+import { ClientStatus } from "src/entities/clientStatus.entity";
+import { Faq } from "src/entities/faq.entity";
+import { Product } from "src/entities/product.entity";
+import { Profiles } from "src/entities/profile.entity";
+import { ProfileUser } from "src/entities/profileUser.entity";
+import { PurchaseRecord } from "src/entities/purchaseRecord.entity";
+import { Receipt } from "src/entities/receipt.entity";
+import { Report } from "src/entities/report.entity";
+import { SaleRecord } from "src/entities/saleRecord.entity";
+import { Schedule } from "src/entities/schedule.entity";
+import { Sign } from "src/entities/sign.entity";
+import { SignStatus } from "src/entities/signStatus.entity";
+import { Supplier } from "src/entities/supplier.entity";
+import { SupplierStatus } from "src/entities/supplierStatus.entity";
+import { Turn } from "src/entities/turn.entity";
+import { Turnero } from "src/entities/turnero.entity";
+import { TurnStatus } from "src/entities/turnStatus.entity";
+import { Type } from "src/entities/type.entity";
+import { TypeConfig } from "src/entities/typeConfig.entity";
+import { User } from "src/entities/user.entity";
+import { Address } from "src/entities/address.entity";
+import { ClientAddress } from "src/entities/clientAddress.entity";
+import { Continent } from "src/entities/continent.entity";
+import { Country } from "src/entities/country.entity";
+import { PoliticalDivision } from "src/entities/politicalDivision.entity";
+import { Region } from "src/entities/region.entity";
 
 const dest = "dist/common/envs/";
 const env: string | undefined = process.env.NODE_ENV;
@@ -51,8 +50,8 @@ export const Config: DataSourceOptions = {
   username: process.env.DATABASE_USER,
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
-  entities: [Accesses, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Region, Report
-    , SaleRecord, Schedule, ScheduleDay, Sign, SignStatus, Supplier, SupplierStatus, Turn, Turnero
+  entities: [Access, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Receipt, Region, Report
+    , SaleRecord, Schedule, Sign, SignStatus, Supplier, SupplierStatus, Turn, Turnero
 , TurnStatus, Type, TypeConfig, User],
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   migrationsRun: false,
@@ -61,6 +60,7 @@ export const Config: DataSourceOptions = {
   // requestTimeout: 90000,
   extra: {
     trustServerCertificate: true,
+    createForeignKeyConstraints: false,
   },
   logging: true
 }
