@@ -3,7 +3,6 @@ import { Type } from "./type.entity";
 import { Product } from "./product.entity";
 import { Supplier } from "./supplier.entity";
 import { Client } from "./client.entity";
-import { Receipt } from "./receipt.entity";
 
 @Entity('SaleRecord')
 export class SaleRecord {
@@ -34,8 +33,5 @@ export class SaleRecord {
     @OneToMany(() => Product, (product) => product.saleRecord)
     @JoinColumn({ name: 'Product_Id' })
     product: Product[];
-
-    // @OneToOne(() => Receipt, (receipt) => receipt.saleRecord)
-	// receipt: Receipt;
 
 }
