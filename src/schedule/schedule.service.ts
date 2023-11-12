@@ -58,6 +58,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
     schedule.initialTurnDateTime = startTime.toISOString();
     schedule.finalTurnDateTime = endTime.toISOString();
     schedule.supplier = supplierFound;
+    schedule.active = true;
     const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
 
     for (const selectedDate of dates) {

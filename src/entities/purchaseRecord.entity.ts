@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { Product } from "./product.entity";
 import { Supplier } from "./supplier.entity";
@@ -20,7 +20,7 @@ export class PurchaseRecord {
     @JoinColumn({ name: 'Product_Type_Id' })
     productType: Type
 
-    @OneToOne(() => Supplier, (supplier) => supplier.purchaseRecord)
+    @ManyToOne(() => Supplier, (supplier) => supplier.purchaseRecord)
     @JoinColumn({ name: 'Supplier_Id' })
     supplier: Supplier;
 

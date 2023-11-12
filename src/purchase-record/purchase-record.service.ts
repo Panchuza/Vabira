@@ -16,12 +16,12 @@ export class PurchaseRecordService {
   }
 
   async findAll() {
-    const purchaseRecords = await this.purchaseRecordRepository.find({relations: {product: true}})
+    const purchaseRecords = await this.purchaseRecordRepository.find({relations: {product: true, supplier: {user: true}}})
     return purchaseRecords
   }
 
   async findOneWithProducts(id: number) {
-    const purchaseRecord = await this.purchaseRecordRepository.findOne({where: {id: id}, relations: {product: true}})
+    const purchaseRecord = await this.purchaseRecordRepository.findOne({where: {id: id}, relations: {product: true, supplier: {user: true}}})
     return purchaseRecord
   }
 

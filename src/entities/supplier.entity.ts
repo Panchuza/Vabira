@@ -34,8 +34,8 @@ export class Supplier {
 	@Column({ name: 'UploadDateTime', type: 'datetime', nullable: true })
 	uploadDateTime: string;
 
-	@OneToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.supplier)
-	purchaseRecord: PurchaseRecord;
+	@OneToMany(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.supplier)
+	purchaseRecord: PurchaseRecord[];
 
 	@OneToOne(() => SaleRecord, (saleRecord) => saleRecord.supplier)
 	saleRecord: SaleRecord;

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Type } from "./type.entity";
 import { PurchaseRecord } from "./purchaseRecord.entity";
 import { SaleRecord } from "./saleRecord.entity";
@@ -31,8 +31,8 @@ export class Product {
    @Column({ name: 'Prize', type: 'decimal', precision: 8, scale: 2, nullable: true })
    prize: number
 
-   @Column({ name: 'Stock', nullable: true })
-   stock: number
+   @Column({ name: 'Active', type: 'bit', nullable: true })
+   active: boolean
 
    @Column({ name: 'CaducityDatetime', type: 'date' })
    caducityDatetime: string
@@ -44,9 +44,10 @@ export class Product {
 	report: Report;
 
    @OneToOne(() => Type)
-   @JoinColumn({ name: 'Product_Type_Id' })
+   @JoinColumn({ name: 'Product_Type_Id'})
    productType: Type
 
+   @Index({ unique: false }) 
    @ManyToOne(() => PurchaseRecord, (purchaseRecord) => purchaseRecord.product)
    @JoinColumn({ name: 'PurchaseRecord_Id' })
    purchaseRecord: PurchaseRecord;

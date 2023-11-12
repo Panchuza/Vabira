@@ -38,6 +38,11 @@ export class TurnController {
     return this.turnService.aproveTurn(updateTurnDto);
   }
 
+  @Patch('desaproveTurn')
+  desaproveTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.desaproveTurn(updateTurnDto);
+  }
+
   @Patch('unAssignTurn')
   unAssignTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.unAssignTurn(updateTurnDto);

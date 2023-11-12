@@ -1,4 +1,5 @@
-import { IsNotEmpty } from "class-validator"
+import { IsNotEmpty, IsObject, IsOptional } from "class-validator"
+import { Supplier } from "src/entities/supplier.entity"
 import { Type } from "src/entities/type.entity"
 
 export class CreateProductDto {
@@ -20,6 +21,10 @@ export class CreateProductDto {
     
     @IsNotEmpty()
     quantity: number
+
+    @IsObject()
+    @IsOptional()
+    supplierId: Supplier
 
     // @IsNotEmpty()
     // stock: number

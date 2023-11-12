@@ -10,9 +10,10 @@ import { EmailService } from 'src/email/email.service';
 import { User } from 'src/entities/user.entity';
 import { Profiles } from 'src/entities/profile.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
+import { Supplier } from 'src/entities/supplier.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, User, Profiles, ProfileUser])],
+  imports: [TypeOrmModule.forFeature([Product, User, Profiles, ProfileUser, Supplier])],
   controllers: [ProductController],
   providers: [ProductService, AuthService, UsersService, JwtService, EmailService]
 })

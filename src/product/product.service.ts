@@ -6,6 +6,7 @@ import { Product } from 'src/entities/product.entity';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { DbException } from 'src/exception/dbException';
 import { PurchaseRecord } from 'src/entities/purchaseRecord.entity';
+import { Supplier } from 'src/entities/supplier.entity';
 
 @Injectable()
 export class ProductService {
@@ -13,6 +14,8 @@ export class ProductService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    @InjectRepository(Supplier)
+    private readonly supplierRepository: Repository<Supplier>,
     @InjectEntityManager()
     private entityManager: EntityManager
   ) { }
@@ -35,11 +38,12 @@ export class ProductService {
           code: code + i,
           codeForBatch: lastBatchValue + 1, 
           quantity: quantity,
+          active: true,
           ...toCreate,
         });
         createdProducts.push(productDto);
       }
-  
+      const supplierFound = await this.supplierRepository.findOne({where: {id: createProductDto.supplierId.id}})
       let results: Product[] = [];
       await this.entityManager.transaction(async (transaction) => {
         try {
@@ -50,6 +54,7 @@ export class ProductService {
           const orderRecord = transaction.create(PurchaseRecord);
   
           orderRecord.purchaseAmount = quantity * toCreate.prize;
+          orderRecord.supplier = supplierFound;
   
           // Guarda la orden de compra
           await transaction.save(orderRecord);
@@ -84,6 +89,7 @@ export class ProductService {
   async findAll() {
     const products = await this.productRepository.createQueryBuilder('Product')
       .select(['Product.id', 'Product.name', 'Product.brand', 'Product.code', 'Product.quantity', 'Product.prize', 'Product.description', 'Product.codeForBatch'])
+      .where('Product.active = 1')
       .getMany();
     return products
   }
@@ -99,7 +105,7 @@ export class ProductService {
         SELECT MIN("P2"."Id")
         FROM "Product" "P2"
         WHERE "P2"."CodeForBatch" = "Product"."CodeForBatch"
-      )`;
+      ) AND "Product"."Active" = 1`;
   
     const products = await this.productRepository.query(query);
   
@@ -133,9 +139,11 @@ export class ProductService {
     if (product) {
       // Obtén el codeForBatch del producto antes de eliminarlo
       const codeForBatch = product.codeForBatch;
+
+      product.active = false;
   
       // Elimina el producto de la base de datos
-      await this.productRepository.remove(product);
+      await this.productRepository.save(product);
   
       // Actualiza la cantidad de productos con el mismo codeForBatch
       await this.decreaseQuantityForBatch(codeForBatch);

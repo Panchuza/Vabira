@@ -60,6 +60,7 @@ export const Config: DataSourceOptions = {
   requestTimeout: 90000,
   extra: {
     trustServerCertificate: true,
+    createForeignKeyConstraints: false,
   },
   logging: true
 }

@@ -198,6 +198,11 @@ export class TurnService {
     return turnTypeStatus
   }
 
+  async validateTypeTurnStatus4() {
+    const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoAusente')
+    return turnTypeStatus
+  }
+
   async assignTurn(updateTurnDto: UpdateTurnDto) {
     const turn = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
@@ -273,6 +278,44 @@ export class TurnService {
       }
     }
     throw new BadRequestException('El turno solicitado ya esta aprobado')
+  }
+
+  async desaproveTurn(updateTurnDto: UpdateTurnDto) {
+    const turn = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
+      .addSelect('client.id')
+      .addSelect('schedule.id')
+      .leftJoin('Turn.client', 'client')
+      .leftJoin('Turn.schedule', 'schedule')
+      .where('Turn.id = :id', { id: updateTurnDto.id })
+      .getOne()
+    const newTurnStatus = new TurnStatus()
+    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
+    newTurnStatus.turnStatusType = await this.validateTypeTurnStatus4()
+    newTurnStatus.turn = turn
+    
+    if (turn.client) {
+      try {
+        let turnResult: any
+        await this.entityManager.transaction(async (transaction) => {
+          try {
+            await this.turnStatusRepository.save(newTurnStatus);
+            turnResult = await transaction.save(turn);
+          } catch (error) {
+            console.log(error);
+            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+          }
+        });
+        return {
+          status: HttpStatus.OK,
+          data: turnResult,
+        }
+      } catch (error) {
+        console.log(error);
+        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+    }
+    throw new BadRequestException('El turno solicitado ya esta desaprobado')
   }
 
   async unAssignTurn(updateTurnDto: UpdateTurnDto) {
