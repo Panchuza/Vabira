@@ -22,6 +22,11 @@ export class SupplierController {
     return this.supplierService.findOne(+id);
   }
 
+  @Get('/findOneUserId')
+  findOne2(@Query('id') id: string) {
+    return this.supplierService.findOneUserId(+id);
+  }
+
   @Get('findOneSupplierByEmail')
   findOneSupplierByEmail(@Query('email') email: string) {
     return this.supplierService.findOneSupplierByEmail(email);

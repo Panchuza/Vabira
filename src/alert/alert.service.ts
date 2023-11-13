@@ -12,7 +12,7 @@ export class AlertService {
 
   async getAlerts(): Promise<Alert[]> {
     return await this.alertRepository.find({
-      relations: ['turn', 'turn.schedule', 'turn.client'],
+      relations: ['turn', 'turn.schedule.supplier', 'turn.client'],
     });
   }
   

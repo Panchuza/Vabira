@@ -84,6 +84,24 @@ export class SupplierService {
     }
   }
 
+  async findOneUserId(id: number) {
+    const supplier = await this.supplierRepository.createQueryBuilder('Supplier')
+      .select(['Supplier.id', 'Supplier.User_Id'])
+      .where('Supplier.User_Id = :id', { id: id })
+      .getOne()
+    if (!supplier) {
+      return new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: `No existe un supplier con el id ${id} ingresado o esta dado de baja`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    } else {
+      return supplier;
+    }
+  }
+
   async findOneSupplierByEmail(email: string) {
     const supplier = await this.supplierRepository.createQueryBuilder('Supplier')
       .select(['Supplier.id', 'Supplier.identificationNumber', 'Supplier.cuit'])
