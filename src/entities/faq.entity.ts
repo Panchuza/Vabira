@@ -10,7 +10,7 @@ export class Faq {
    name: string;
    
 
-   @Column({name: 'Description'})
+   @Column({name: 'Description', length: 1000})
    description: string //respuesta
 
    @OneToOne(() => User, (user) => user.faq)
