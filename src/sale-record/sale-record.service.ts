@@ -26,8 +26,10 @@ export class SaleRecordService {
 
     const {client, supplier, ...toCreate} = createSaleRecordDto
     const clientFound = await this.clientRepository.findOne({where: {id: client.id}})
-    const supplierFound = await this.supplierRepository.findOne({where: {id: client.id}})
+    const supplierFound = await this.supplierRepository.findOne({where: {id: supplier.id}})
     try {
+      let quantity = 0
+      let amount = 0
         const saleRecord = await this.saleRecordRepository.create({
           client,
           supplier, 
@@ -36,8 +38,14 @@ export class SaleRecordService {
         saleRecord.client = clientFound
         saleRecord.supplier = supplierFound
         saleRecord.saleDateTime = toCreate.saleDateTime
-        saleRecord.saleAmount = toCreate.saleAmount
-        saleRecord.quantity = toCreate.quantity
+        for (let i = 0; i < toCreate.product.length; i++) {
+          quantity++
+        }
+        toCreate.product.forEach(product => {
+          amount += product.prize
+        });
+        saleRecord.saleAmount = amount
+        saleRecord.quantity = quantity
 
         let result: SaleRecord
         await this.entityManager.transaction(async (transaction) => {
@@ -60,10 +68,13 @@ export class SaleRecordService {
   }
 
   async findAll() {
-    const products = await this.saleRecordRepository.createQueryBuilder('SaleRecord')
-      .select(['SaleRecord.id', 'SaleRecord.saleDateTime', 'SaleRecord.saleAmount', 'SaleRecord.quantity', 'SaleRecord.supplier', 'SaleRecord.client'])
-      .getMany();
+    const products = await this.saleRecordRepository.find({relations: {client:{user: true}, supplier:{user: true}}})
     return products
+  }
+
+  async findOneWithProducts(id: number) {
+    const purchaseRecord = await this.saleRecordRepository.findOne({where: {id: id}, relations: {product: true, supplier: {user: true}, client: {user: true}}})
+    return purchaseRecord
   }
 
   findOne(id: number) {
