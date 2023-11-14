@@ -24,41 +24,41 @@ export class ProductService {
   async create(createProductDto: CreateProductDto) {
     const { code, quantity, ...toCreate } = createProductDto;
     const createdProducts: Product[] = [];
-  
+
     try {
       // Obtén el último valor de codeForBatch
       const lastBatch = await this.productRepository.createQueryBuilder('product')
         .select('MAX(product.codeForBatch)', 'lastBatch')
         .getRawOne();
-  
+
       const lastBatchValue = lastBatch ? lastBatch.lastBatch || 0 : 0;
-  
+
       for (let i = 0; i < quantity; i++) {
         const productDto = await this.productRepository.create({
           code: code + i,
-          codeForBatch: lastBatchValue + 1, 
+          codeForBatch: lastBatchValue + 1,
           quantity: quantity,
           active: true,
           ...toCreate,
         });
         createdProducts.push(productDto);
       }
-      const supplierFound = await this.supplierRepository.findOne({where: {id: createProductDto.supplierId.id}})
+      const supplierFound = await this.supplierRepository.findOne({ where: { id: createProductDto.supplierId.id } })
       let results: Product[] = [];
       await this.entityManager.transaction(async (transaction) => {
         try {
           // Guarda todos los productos en una transacción
           results = await transaction.save(createdProducts);
-  
+
           // Crea una nueva orden de compra
           const orderRecord = transaction.create(PurchaseRecord);
-  
+
           orderRecord.purchaseAmount = quantity * toCreate.prize;
           orderRecord.supplier = supplierFound;
-  
+
           // Guarda la orden de compra
           await transaction.save(orderRecord);
-  
+
           // Asigna PurchaseRecord_Id a cada producto creado
           for (const product of results) {
             product.purchaseRecord = orderRecord;
@@ -69,7 +69,7 @@ export class ProductService {
           throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
       });
-  
+
       return {
         status: HttpStatus.CREATED,
         data: results,
@@ -79,7 +79,7 @@ export class ProductService {
       throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  
+
 
   async validateCode(code: string) {
     const productFound = await this.productRepository.findOne({ where: { code: code } })
@@ -96,22 +96,30 @@ export class ProductService {
 
   async findAll2() {
     const query = `
-      SELECT "Product"."Id" AS "Product_Id", "Product"."Name" AS "Product_Name",
-             "Product"."Code" AS "Product_Code", "Product"."Brand" AS "Product_Brand",
-             "Product"."Description" AS "Product_Description", "Product"."Quantity" AS "Product_Quantity",
-             "Product"."CodeForBatch" AS "Product_CodeForBatch", "Product"."Prize" AS "Product_Prize"
-      FROM "Product" "Product"
-      WHERE "Product"."Id" NOT IN (
-        SELECT MIN("P2"."Id")
-        FROM "Product" "P2"
-        WHERE "P2"."CodeForBatch" = "Product"."CodeForBatch"
-      ) AND "Product"."Active" = 1`;
-  
+    SELECT
+    Product.Id AS Product_Id,
+    Product.Name AS Product_Name,
+    Product.Code AS Product_Code,
+    Product.Brand AS Product_Brand,
+    Product.Description AS Product_Description,
+    Product.Quantity AS Product_Quantity,
+    Product.CodeForBatch AS Product_CodeForBatch,
+    Product.Prize AS Product_Prize
+FROM
+    Product
+WHERE
+    Product.Id NOT IN (
+        SELECT MIN(P2.Id)
+        FROM Product P2
+        WHERE P2.CodeForBatch = Product.CodeForBatch
+    )
+    AND Product.Active = 1;`;
+
     const products = await this.productRepository.query(query);
-  
+
     // Agrupar productos por codeForBatch
     const productsByCodeForBatch = {};
-  
+
     for (const product of products) {
       const codeForBatch = product.Product_CodeForBatch;
       if (!productsByCodeForBatch[codeForBatch]) {
@@ -119,11 +127,11 @@ export class ProductService {
       }
       productsByCodeForBatch[codeForBatch].push(product);
     }
-  
+
     return productsByCodeForBatch;
   }
-  
-  
+
+
 
   findOne(id: number) {
     return `This action returns a #${id} product`;
@@ -133,18 +141,18 @@ export class ProductService {
   //   return `This action updates a #${id} product`;
   // }
 
-  async remove(updateProductDto: UpdateProductDto) {    
+  async remove(updateProductDto: UpdateProductDto) {
     const product = await this.productRepository.findOne({ where: { id: updateProductDto.id } })
-    
+
     if (product) {
       // Obtén el codeForBatch del producto antes de eliminarlo
       const codeForBatch = product.codeForBatch;
 
       product.active = false;
-  
+
       // Elimina el producto de la base de datos
       await this.productRepository.save(product);
-  
+
       // Actualiza la cantidad de productos con el mismo codeForBatch
       await this.decreaseQuantityForBatch(codeForBatch);
     } else {
@@ -157,20 +165,20 @@ export class ProductService {
       );
     }
   }
-  
+
   // Método para disminuir en 1 la cantidad de productos con el mismo codeForBatch
   private async decreaseQuantityForBatch(codeForBatch: number): Promise<void> {
     const productsWithSameBatch = await this.productRepository.find({
       where: { codeForBatch: codeForBatch },
     });
-  
+
     for (const product of productsWithSameBatch) {
       // Asegúrate de que la cantidad no sea menor que cero
       product.quantity = Math.max(0, product.quantity - 1);
-  
+
       // Guarda los cambios en la base de datos
       await this.productRepository.save(product);
     }
   }
-  
+
 }

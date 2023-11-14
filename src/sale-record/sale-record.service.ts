@@ -23,49 +23,53 @@ export class SaleRecordService {
   ) { }
 
   async create(createSaleRecordDto: CreateSaleRecordDto) {
+    const { client, supplier, ...toCreate } = createSaleRecordDto;
+    const clientFound = await this.clientRepository.findOne({ where: { id: client.id } });
+    const supplierFound = await this.supplierRepository.findOne({ where: { id: supplier.id } });
 
-    const {client, supplier, ...toCreate} = createSaleRecordDto
-    const clientFound = await this.clientRepository.findOne({where: {id: client.id}})
-    const supplierFound = await this.supplierRepository.findOne({where: {id: supplier.id}})
     try {
-      let quantity = 0
-      let amount = 0
+        let quantity = 0;
+        let amount = 0;
+
         const saleRecord = await this.saleRecordRepository.create({
-          client,
-          supplier, 
-          ...toCreate
-        })
-        saleRecord.client = clientFound
-        saleRecord.supplier = supplierFound
-        saleRecord.saleDateTime = toCreate.saleDateTime
-        for (let i = 0; i < toCreate.product.length; i++) {
-          quantity++
-        }
-        toCreate.product.forEach(product => {
-          amount += product.prize
+            client,
+            supplier,
+            ...toCreate,
         });
-        saleRecord.saleAmount = amount
-        saleRecord.quantity = quantity
 
-        let result: SaleRecord
-        await this.entityManager.transaction(async (transaction) => {
-          try {
-            result = await transaction.save(saleRecord)
+        saleRecord.client = clientFound;
+        saleRecord.supplier = supplierFound;
+        saleRecord.saleDateTime = toCreate.saleDateTime;
 
-          } catch (error) {
-            console.log(error);
-            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        })
-        return {
-          status: HttpStatus.CREATED,
-          data: result,
+        for (const product of toCreate.product) {
+            quantity++;
+            amount += parseFloat(product.prize as any); // Convert prize to a numeric value
         }
+
+        saleRecord.saleAmount = amount;
+        saleRecord.quantity = quantity;
+
+        let result: SaleRecord;
+
+        await this.entityManager.transaction(async (transaction) => {
+            try {
+                result = await transaction.save(saleRecord);
+            } catch (error) {
+                console.log(error);
+                throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        });
+
+        return {
+            status: HttpStatus.CREATED,
+            data: result,
+        };
     } catch (error) {
-      console.log(error);
-      throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
+        console.log(error);
+        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
     }
-  }
+}
+
 
   async findAll() {
     const products = await this.saleRecordRepository.find({relations: {client:{user: true}, supplier:{user: true}}})
