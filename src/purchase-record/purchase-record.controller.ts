@@ -38,7 +38,7 @@ export class PurchaseRecordController {
     doc.image(imagePath, { width: 100, height: 100 }); // Ajusta el ancho y alto según tus necesidades
     doc.fontSize(12).text(`Orden de Compra Id: ${purchaseRecord.id}`);
     doc.fontSize(10).text(`Fecha de Compra: ${formattedPurchaseDate}`);
-    doc.fontSize(10).text(`Proveedor que realizo la venta: ${purchaseRecord.supplier.user.firstName} ${purchaseRecord.supplier.user.lastName}`);
+    doc.fontSize(10).text(`Proveedor que realizo la compra: ${purchaseRecord.supplier.user.firstName} ${purchaseRecord.supplier.user.lastName}`);
     doc.fontSize(10).text(`Monto Total: ${purchaseRecord.purchaseAmount}`);
     let quantity = 0
     for (let i = 0; i < purchaseRecord.product.length; i++) {
