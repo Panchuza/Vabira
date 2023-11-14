@@ -34,7 +34,7 @@ export class PurchaseRecordController {
 
     const formattedPurchaseDate = format(new Date(purchaseRecord.purchaseDateTime), 'dd-MM-yyyy HH:mm:ss');
     // Agrega contenido al PDF (ajusta esto según tu estructura de datos)
-    const imagePath = path.join(process.cwd(), 'vabira.jpeg');
+    const imagePath = path.join(process.cwd(), 'logo-t-1.png');
     doc.image(imagePath, { width: 100, height: 100 }); // Ajusta el ancho y alto según tus necesidades
     doc.fontSize(12).text(`Orden de Compra Id: ${purchaseRecord.id}`);
     doc.fontSize(10).text(`Fecha de Compra: ${formattedPurchaseDate}`);

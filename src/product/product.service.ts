@@ -32,16 +32,19 @@ export class ProductService {
         .getRawOne();
 
       const lastBatchValue = lastBatch ? lastBatch.lastBatch || 0 : 0;
+      
+      let currentCode: any = code; 
 
       for (let i = 0; i < quantity; i++) {
-        const productDto = await this.productRepository.create({
-          code: code + i,
-          codeForBatch: lastBatchValue + 1,
-          quantity: quantity,
-          active: true,
-          ...toCreate,
-        });
-        createdProducts.push(productDto);
+          const productDto = await this.productRepository.create({
+              code: currentCode,
+              codeForBatch: lastBatchValue + 1,
+              quantity: quantity,
+              active: true,
+              ...toCreate,
+          });
+          createdProducts.push(productDto);
+          currentCode++;
       }
       const supplierFound = await this.supplierRepository.findOne({ where: { id: createProductDto.supplierId.id } })
       let results: Product[] = [];
