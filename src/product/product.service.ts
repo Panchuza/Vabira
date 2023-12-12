@@ -34,8 +34,9 @@ export class ProductService {
       const lastBatchValue = lastBatch ? lastBatch.lastBatch || 0 : 0;
 
       for (let i = 0; i < quantity; i++) {
+        const cod = `${+code + i}`
         const productDto = await this.productRepository.create({
-          code: code + i,
+          code: cod,
           codeForBatch: lastBatchValue + 1,
           quantity: quantity,
           active: true,
