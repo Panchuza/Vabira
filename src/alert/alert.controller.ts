@@ -1,7 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { AlertService } from './alert.service';
-import { Alert } from '../entities/alert.entity';
-let cron = require('node-cron');
 
 @Controller('alerts')
 export class AlertController {

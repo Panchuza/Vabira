@@ -15,6 +15,7 @@ import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { es } from 'date-fns/locale';
 import * as moment from 'moment';
 import { User } from 'src/entities/user.entity';
+import { Alert } from 'src/entities/alert.entity';
 
 
 @Injectable()
@@ -48,7 +49,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
     throw new Error('La duración del turno excede el tiempo disponible.');
   }
   const userFound = await this.userRepository.findOne({where: {id: supplier.id}})
-  const supplierFound = await this.supplierRepository.findOne({ where: { user: userFound as any} });
+  const supplierFound = await this.supplierRepository.findOne({ where: { user: userFound as any}, relations: {user: true}});
 
   const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
     const schedule = new Schedule();
@@ -104,10 +105,14 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
           newTurn.classDayType = classDayType;
           newTurn.schedule = savedSchedule;
           newTurn.turnStatus = [newTurnStatus];
-
           await transactionalEntityManager.save(TurnStatus, newTurnStatus);
           await transactionalEntityManager.save(Turn, newTurn);
-
+          const newAlert = new Alert();
+          newAlert.description = `Nueva alerta para agenda de: ${supplierFound.user.firstName}`
+          newAlert.name = `Alerta para agenda de: ${supplierFound.user.firstName}`
+          newAlert.turn = newTurn
+          await transactionalEntityManager.save(Alert, newAlert)
+  
           currentTime = dateFns.addMinutes(currentTime, turnDuration);
         }
       }

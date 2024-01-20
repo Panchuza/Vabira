@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Alert } from '../entities/alert.entity';
-let cron = require('node-cron');
 
 @Injectable()
 export class AlertService {
@@ -22,9 +21,6 @@ export class AlertService {
   }
 
   async getAlertsForSupplier(id: string) {
-    console.log('entra ?');
-    
-    console.log('aca?', id);
     const alerts = await this.alertRepository.createQueryBuilder('alert')
     .leftJoinAndSelect('alert.turn', 'turn')
     .leftJoinAndSelect('turn.client', 'client')

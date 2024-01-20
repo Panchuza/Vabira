@@ -19,7 +19,7 @@ export class Turn {
     @Column({ name: 'DateTo', type: 'datetime', nullable: true })
     dateTo: string;
 
-    @OneToOne(() => Alert, (alert) => alert.turn)
+    @OneToOne(() => Alert, (alert) => alert.turn, {cascade: true})
     alert: Alert
 
     @OneToOne(() => Report, (report) => report.turn)
