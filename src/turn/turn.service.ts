@@ -1,5 +1,4 @@
-import { Injectable, HttpException, HttpStatus, BadRequestException } from '@nestjs/common';
-import { CreateTurnDto } from './dto/create-turn.dto';
+import { Injectable, HttpStatus, BadRequestException, NotFoundException } from '@nestjs/common';
 import { UpdateTurnDto } from './dto/update-turn.dto';
 import { DbException } from 'src/exception/dbException';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
@@ -310,52 +309,68 @@ export class TurnService {
   async assignTurn(updateTurnDto: UpdateTurnDto) {
     const turn = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
-      .addSelect('client.id')
-      .addSelect('schedule.id')
-      .leftJoin('Turn.client', 'client')
-      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoinAndSelect('Turn.client', 'client')
+      .leftJoinAndSelect('Turn.schedule', 'schedule')
+      .leftJoinAndSelect('Turn.sign', 'sign')
+      .leftJoinAndSelect('sign.signStatus', 'signStatus')
+      .leftJoinAndSelect('signStatus.signStatusType', 'signStatusType')
       .where('Turn.id = :id', { id: updateTurnDto.id })
       .getOne();
-  
+
+    if (!turn) {
+      throw new NotFoundException('Turno no encontrado');
+    }
+
+    // Verifica si el turno tiene una seña asignada y si la seña está pagada
+    const isSignAssigned = turn.schedule.hasSign;
+    if (isSignAssigned === true) {
+      const isSignPaid = isSignAssigned && turn.sign.signStatus.some(status => status.signStatusType.code === 'SeñaPagada');
+      if (isSignAssigned && !isSignPaid) {
+        // Si la seña está asignada pero no está pagada, no permite asignar el turno
+        throw new BadRequestException('No se puede asignar el turno hasta que la seña esté pagada');
+      }
+      updateTurnDto.signPay === turn.sign.initialAmount
+    }
+
+
     const newTurnStatus = new TurnStatus();
-    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date);
+    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
     newTurnStatus.turnStatusType = await this.validateTypeTurnStatus2();
     newTurnStatus.turn = turn;
-  
-    if (!turn.client) {
-      try {
-        let turnResult: any;
-        let alertResult: any;
-  
-        await this.entityManager.transaction(async (transaction) => {
-          try {
-            turn.client = updateTurnDto.client;
-            await this.turnStatusRepository.save(newTurnStatus);
-            turnResult = await transaction.save(turn);
-  
-            // Crear una nueva alerta asociada al turno
-            const newAlert = new Alert();
-            newAlert.name = 'Nueva Alerta';
-            newAlert.description = 'Descripción de la nueva alerta';
-            newAlert.turn = turn;
-            alertResult = await transaction.save(newAlert);
-          } catch (error) {
-            console.log(error);
-            throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
-          }
-        });
-  
-        return {
-          status: HttpStatus.OK,
-          data: { turn: turnResult, alert: alertResult },
-        };
-      } catch (error) {
-        console.log(error);
-        throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+
+    try {
+      let turnResult: any;
+      // let alertResult: any;
+
+      await this.entityManager.transaction(async (transaction) => {
+        try {
+          turn.client = updateTurnDto.client;
+          await this.turnStatusRepository.save(newTurnStatus);
+          turnResult = await transaction.save(turn);
+
+          // Crear una nueva alerta asociada al turno
+          // const newAlert = new Alert();
+          // newAlert.name = 'Nueva Alerta';
+          // newAlert.description = 'Descripción de la nueva alerta';
+          // newAlert.turn = turn;
+          // alertResult = await transaction.save(newAlert);
+        } catch (error) {
+          console.log(error);
+          throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+      });
+
+      return {
+        status: HttpStatus.OK,
+        data: {turn: turnResult}
+        // data: { turn: turnResult, alert: alertResult },
+      };
+    } catch (error) {
+      console.log(error);
+      throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    throw new BadRequestException('El turno solicitado ya está registrado');
   }
+
 
   async aproveTurn(updateTurnDto: UpdateTurnDto) {
     const turn = await this.turnRepository.createQueryBuilder('Turn')
@@ -370,7 +385,7 @@ export class TurnService {
     newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
     newTurnStatus.turnStatusType = await this.validateTypeTurnStatus3()
     newTurnStatus.turn = turn
-    
+
     if (turn.client) {
       try {
         let turnResult: any
@@ -408,7 +423,7 @@ export class TurnService {
     newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
     newTurnStatus.turnStatusType = await this.validateTypeTurnStatus4()
     newTurnStatus.turn = turn
-    
+
     if (turn.client) {
       try {
         let turnResult: any
@@ -501,18 +516,18 @@ export class TurnService {
       )
       .where('Schedule.id = :id', { id: idSchedule })
       .getMany();
-  
+
     // Filtrar los turnos reservados, aprobados y desaprobados
     const reservedTurns = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Reservado').length;
     const aproveTurns = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Presente').length;
     const desaproveTurns = turns.filter((turn) => turn.turnStatus[0].turnStatusType.name === 'Ausente').length;
-  
+
     // Calcular la cantidad de turnos en total
     const totalTurns = turns.length;
-  
+
     // Calcular la cantidad de turnos cuyo último estado es "TurnoReservado"
     const availableTurns = totalTurns - reservedTurns - aproveTurns - desaproveTurns;
-  
+
     return {
       totalTurns,
       reservedTurns,
@@ -522,8 +537,8 @@ export class TurnService {
       desaproveTurns
     };
   }
-  
-  
+
+
 
   private padTo2Digits(num: number) {
     return num.toString().padStart(2, '0');

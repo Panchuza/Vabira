@@ -16,6 +16,8 @@ import { es } from 'date-fns/locale';
 import * as moment from 'moment';
 import { User } from 'src/entities/user.entity';
 import { Alert } from 'src/entities/alert.entity';
+import { Sign } from 'src/entities/sign.entity';
+import { SignStatus } from 'src/entities/signStatus.entity';
 
 
 @Injectable()
@@ -37,7 +39,7 @@ export class ScheduleService {
 
 
   async createSchedule(createScheduleDto: CreateScheduleDto) {
-    const { days, turnDuration, supplier, dates } = createScheduleDto;
+    const { days, turnDuration, supplier, dates, sign } = createScheduleDto;
 
     // Obtén la fecha de inicio y fin para los turnos
     const startTime = dateFns.parse(createScheduleDto.initialTurnDateTime, 'HH:mm', new Date());
@@ -112,9 +114,18 @@ export class ScheduleService {
               const newAlert = new Alert();
               newAlert.description = `Nueva alerta para agenda de: ${supplierFound.user.firstName}`
               newAlert.name = `Alerta para agenda de: ${supplierFound.user.firstName}`
-              newAlert.turn = newTurn
-              await transactionalEntityManager.save(Alert, newAlert)
-
+              newAlert.turn = newTurn;
+              await transactionalEntityManager.save(Alert, newAlert);
+              const newSign = new Sign();
+              const newSignStatus = new SignStatus();
+              newSignStatus.statusRegistrationDateTime = this.formatDate(new Date());
+              newSignStatus.signStatusType = await this.validateSignTurnStatus();
+              newSign.signStatus = [newSignStatus];
+              newSign.createDateTime = this.formatDate(new Date());
+              newSign.initialAmount = createScheduleDto.sign
+              newSign.turn = newTurn;
+              await transactionalEntityManager.save(SignStatus, newSignStatus)
+              await transactionalEntityManager.save(Sign, newSign)
               currentTime = dateFns.add(currentTime, { minutes: turnDuration });
             }
           } else {
@@ -141,7 +152,16 @@ export class ScheduleService {
               newAlert.name = `Alerta para agenda de: ${supplierFound.user.firstName}`
               newAlert.turn = newTurn
               await transactionalEntityManager.save(Alert, newAlert)
-
+              const newSign = new Sign();
+              const newSignStatus = new SignStatus();
+              newSignStatus.statusRegistrationDateTime = this.formatDate(new Date());
+              newSignStatus.signStatusType = await this.validateSignTurnStatus();
+              newSign.signStatus = [newSignStatus];
+              newSign.createDateTime = this.formatDate(new Date());
+              newSign.initialAmount = createScheduleDto.sign
+              newSign.turn = newTurn;
+              await transactionalEntityManager.save(SignStatus, newSignStatus)
+              await transactionalEntityManager.save(Sign, newSign)
               currentTime = dateFns.add(currentTime, { minutes: turnDuration });
             }
 
@@ -160,6 +180,16 @@ export class ScheduleService {
     return turnTypeStatus
   }
 
+  async validateSignTurnStatus(){
+    const signTypeStatus = await this.typeService.findTypeByCodeJust('SeñaAPagar')
+    return signTypeStatus
+  }
+
+  async validateSignTurnStatus2(){
+    const signTypeStatus = await this.typeService.findTypeByCodeJust('SeñaPagada')
+    return signTypeStatus
+  }
+
   async findAll() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
       .select(['Schedule.id', 'Schedule.name'])
@@ -176,7 +206,7 @@ export class ScheduleService {
 
   async findAllForSupplier() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-      .select(['Schedule.id', 'Schedule.name'])
+      .select(['Schedule.id', 'Schedule.name', 'Schedule.hasSign'])
       .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
       .leftJoin('Schedule.supplier', 'Supplier')
       .leftJoin('Supplier.user', 'User')

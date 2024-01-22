@@ -1,4 +1,4 @@
-import { IsArray, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsArray, IsBoolean, IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { Supplier } from "src/entities/supplier.entity";
 import { Turnero } from "src/entities/turnero.entity";
 import { Type } from "src/entities/type.entity";
@@ -25,8 +25,11 @@ export class CreateScheduleDto {
     @IsInt()
     turnDuration: number; // Duración de cada turno en minutos
 
-    // @IsNotEmpty()
+    @IsBoolean()
     hasSign: boolean;
+
+    @IsNumber()
+    sign: number;
 
     classDayType: Type
 
