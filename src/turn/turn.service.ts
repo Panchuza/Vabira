@@ -347,13 +347,6 @@ export class TurnService {
           turn.client = updateTurnDto.client;
           await this.turnStatusRepository.save(newTurnStatus);
           turnResult = await transaction.save(turn);
-
-          // Crear una nueva alerta asociada al turno
-          // const newAlert = new Alert();
-          // newAlert.name = 'Nueva Alerta';
-          // newAlert.description = 'Descripción de la nueva alerta';
-          // newAlert.turn = turn;
-          // alertResult = await transaction.save(newAlert);
         } catch (error) {
           console.log(error);
           throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -363,7 +356,6 @@ export class TurnService {
       return {
         status: HttpStatus.OK,
         data: {turn: turnResult}
-        // data: { turn: turnResult, alert: alertResult },
       };
     } catch (error) {
       console.log(error);
