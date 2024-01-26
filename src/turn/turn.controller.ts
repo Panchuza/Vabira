@@ -43,6 +43,11 @@ export class TurnController {
     return this.turnService.assignTurn(updateTurnDto);
   }
 
+  @Patch('turnForPay')
+  turnForPay(@Body() idTurno: number) {
+    return this.turnService.turnForPay(idTurno);
+  }
+
   @Patch('aproveTurn')
   aproveTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.aproveTurn(updateTurnDto);

@@ -7,8 +7,8 @@ import { EntityManager, Repository } from 'typeorm';
 import { TypeService } from 'src/type/type.service';
 import { TurnStatus } from 'src/entities/turnStatus.entity';
 import * as moment from 'moment';
-import { Alert } from 'src/entities/alert.entity';
 import { Client } from 'src/entities/client.entity';
+import { SignStatus } from 'src/entities/signStatus.entity';
 
 @Injectable()
 export class TurnService {
@@ -17,6 +17,8 @@ export class TurnService {
     private turnRepository: Repository<Turn>,
     @InjectRepository(TurnStatus)
     private turnStatusRepository: Repository<TurnStatus>,
+    @InjectRepository(SignStatus)
+    private signStatusRepository: Repository<SignStatus>,
     @InjectRepository(Client)
     private clientRepository: Repository<Client>,
     @InjectEntityManager()
@@ -306,6 +308,11 @@ export class TurnService {
     return turnTypeStatus
   }
 
+  async validateTypeSignStatus() {
+    const turnTypeStatus = await this.typeService.findTypeByCodeJust('SeñaEsperandoAprobacion')
+    return turnTypeStatus
+  }
+
   async assignTurn(updateTurnDto: UpdateTurnDto) {
     const turn = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.schedule', 'Turn.client'])
@@ -472,6 +479,38 @@ export class TurnService {
     } else {
       throw new BadRequestException('El turno no corresponde al cliente logueado')
     }
+  }
+
+  async turnForPay(idTurn: any){
+    // const turnFound = await this.turnRepository.findOne({where: {id: idTurn}, relations: [
+    //   'sign',
+    //   'sign.signStatus',
+    //   'signStatus.signStatusType',
+    //   'turnStatus',
+    //   'turnStatus.turnStatusType'
+    // ]})
+    const turnFound = await this.turnRepository.createQueryBuilder('turn')
+    .select('turn.id')
+    .leftJoinAndSelect('turn.sign', 'sign')
+    .leftJoinAndSelect('sign.signStatus', 'signStatus')
+    .leftJoinAndSelect('signStatus.signStatusType', 'signStatusType')
+    .leftJoinAndSelect('turn.turnStatus', 'turnStatus')
+    .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
+    .leftJoinAndSelect('turn.client', 'client')
+    .where('turn.id = :id', {id: idTurn.idTurno})
+    .getOne()
+    const statusBase = await this.validateTypeTurnStatus()
+    if(turnFound.turnStatus[0].turnStatusType.code != statusBase.code || turnFound.client){
+      throw new BadRequestException('El turno debe de estar disponible')
+    }
+    const clientFound = await this.clientRepository.findOne({where: {id: idTurn.idCliente}})
+    turnFound.client = clientFound
+    const newSignStatus = new SignStatus()
+    newSignStatus.statusRegistrationDateTime = this.formatDate(new Date)
+    newSignStatus.signStatusType = await this.validateTypeSignStatus()
+    newSignStatus.sign = turnFound.sign
+    await this.signStatusRepository.save(newSignStatus);
+    await this.turnRepository.save(turnFound)
   }
 
   async fillTurns(idSchedule: number) {
