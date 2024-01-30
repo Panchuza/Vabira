@@ -39,7 +39,7 @@ export class ScheduleService {
 
 
   async createSchedule(createScheduleDto: CreateScheduleDto) {
-    const { days, turnDuration, supplier, dates, sign } = createScheduleDto;
+    const { days, turnDuration, supplier, dates, alias } = createScheduleDto;
 
     // Obtén la fecha de inicio y fin para los turnos
     const startTime = dateFns.parse(createScheduleDto.initialTurnDateTime, 'HH:mm', new Date());
@@ -61,6 +61,9 @@ export class ScheduleService {
       schedule.initialTurnDateTime = startTime.toISOString();
       schedule.finalTurnDateTime = endTime.toISOString();
       schedule.supplier = supplierFound;
+      if(alias){
+        schedule.alias = alias;
+      }
       schedule.active = true;
       const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
 
@@ -217,10 +220,11 @@ export class ScheduleService {
 
   async findOne(id: number) {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-      .select(['Schedule.id', 'Schedule.name'])
+      .select(['Schedule.id', 'Schedule.name', 'Schedule.alias'])
       .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
       .addSelect(['Type.id', 'Type.name'])
       .leftJoin('Schedule.turn', 'Turn')
+      .leftJoinAndSelect('Turn.sign', 'sign')
       .leftJoin('Turn.classDayType', 'Type')
       .leftJoin('Schedule.supplier', 'Supplier')
       .where('Schedule.id = :id', { id: id })

@@ -34,6 +34,12 @@ export class UsersController {
     return this.usersService.findOneByEmail(email);
   }
 
+  @Get('/findOneEmailForNotifications')
+  @Auth()
+  findOneByEmailForNotification(@Query('email') email: string) {
+    return this.usersService.findOneByEmailForNotification(email);
+  }
+
   @Patch('/update')
   update(@Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(updateUserDto);

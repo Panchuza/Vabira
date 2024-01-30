@@ -8,6 +8,9 @@ export class CreateScheduleDto {
     @IsNotEmpty()
     name: string;
 
+    @IsOptional()
+    alias: string;
+
     @IsArray()
     @IsString({ each: true })
     days: string[]; 

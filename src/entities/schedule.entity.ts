@@ -12,6 +12,9 @@ export class Schedule {
     @Column({ name: 'Name', type: 'varchar', nullable: true })
     name: string;
 
+    @Column({ name: 'Alias', type: 'varchar', nullable: true })
+    alias: string;
+
     @Column({ name: 'InitialTurnDateTime', type: 'datetime', nullable: true })
     initialTurnDateTime: string;
 

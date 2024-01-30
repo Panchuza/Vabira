@@ -287,6 +287,62 @@ export class TurnService {
 
     return formattedTurns;
   }
+  async findAproveWithSignTurnsForSchedule(scheduleId: string) {
+    const statusTurn = await this.validateTypeTurnStatus2()
+    const statusSign = await this.validateTypeSignStatus()
+    const turns = await this.turnRepository.createQueryBuilder('Turn')
+      .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
+      .addSelect(['client.id', 'user.id', 'user.username', 'user.firstName', 'user.lastName'])
+      .addSelect('schedule.id')
+      .addSelect(['type.id', 'type.name'])
+      .addSelect(['turnStatus.id', 'turnStatus.turnStatusType'])
+      .addSelect(['turnStatusType.id', 'turnStatusType.name'])
+      .leftJoin('Turn.client', 'client')
+      .leftJoinAndSelect('Turn.sign', 'sign')
+      .leftJoinAndSelect('sign.signStatus', 'signStatus')
+      .leftJoinAndSelect('signStatus.signStatusType', 'signStatusType')
+      .leftJoin('client.user', 'user')
+      .leftJoin('Turn.classDayType', 'type')
+      .leftJoin('Turn.schedule', 'schedule')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('Turn.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(Turn, 'Turn')
+            .leftJoin('Turn.turnStatus', 'ss')
+            .groupBy('Turn.id'),
+        'sm',
+        'sm.id = Turn.id',
+      )
+      .leftJoin(
+        'Turn.turnStatus',
+        'turnStatus',
+        'turnStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'turnStatus.turnStatusType',
+        'turnStatusType',
+      )
+      // .where('turnStatusType.id = :status', { status: statusTurn.id })
+      .where('signStatusType.id = :statusSign', { statusSign: statusSign.id })
+      .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
+      .getMany()
+
+
+    // if (turns.length === 0) {
+    //   throw new BadRequestException('No existen turnos disponibles');
+    // }
+
+    const formattedTurns = turns.map(turn => ({
+      ...turn,
+      dateFrom: moment(turn.dateFrom).format('hh:mm A'),
+      dateTo: moment(turn.dateTo).format('hh:mm A'),
+      monthDay: moment(turn.dateFrom).format('DD/MM'),
+    }));
+
+    return formattedTurns;
+  }
 
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
@@ -482,13 +538,6 @@ export class TurnService {
   }
 
   async turnForPay(idTurn: any){
-    // const turnFound = await this.turnRepository.findOne({where: {id: idTurn}, relations: [
-    //   'sign',
-    //   'sign.signStatus',
-    //   'signStatus.signStatusType',
-    //   'turnStatus',
-    //   'turnStatus.turnStatusType'
-    // ]})
     const turnFound = await this.turnRepository.createQueryBuilder('turn')
     .select('turn.id')
     .leftJoinAndSelect('turn.sign', 'sign')
@@ -509,8 +558,13 @@ export class TurnService {
     newSignStatus.statusRegistrationDateTime = this.formatDate(new Date)
     newSignStatus.signStatusType = await this.validateTypeSignStatus()
     newSignStatus.sign = turnFound.sign
+    const newTurnStatus = new TurnStatus()
+    newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date)
+    newTurnStatus.turnStatusType = await this.validateTypeSignStatus()
+    newTurnStatus.turn = turnFound
     await this.signStatusRepository.save(newSignStatus);
     await this.turnRepository.save(turnFound)
+    await this.turnStatusRepository.save(newTurnStatus);
   }
 
   async fillTurns(idSchedule: number) {
