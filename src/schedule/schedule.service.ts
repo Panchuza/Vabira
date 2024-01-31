@@ -15,6 +15,9 @@ import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { es } from 'date-fns/locale';
 import * as moment from 'moment';
 import { User } from 'src/entities/user.entity';
+import { Alert } from 'src/entities/alert.entity';
+import { Sign } from 'src/entities/sign.entity';
+import { SignStatus } from 'src/entities/signStatus.entity';
 
 
 @Injectable()
@@ -35,93 +38,159 @@ export class ScheduleService {
   ) { }
 
 
-async createSchedule(createScheduleDto: CreateScheduleDto) {
-  const { days, turnDuration, supplier, dates } = createScheduleDto;
+  async createSchedule(createScheduleDto: CreateScheduleDto) {
+    const { days, turnDuration, supplier, dates, alias } = createScheduleDto;
 
-  // Obtén la fecha de inicio y fin para los turnos
-  const startTime = dateFns.parse(createScheduleDto.initialTurnDateTime, 'HH:mm', new Date());
-  const endTime = dateFns.parse(createScheduleDto.finalTurnDateTime, 'HH:mm', new Date());
+    // Obtén la fecha de inicio y fin para los turnos
+    const startTime = dateFns.parse(createScheduleDto.initialTurnDateTime, 'HH:mm', new Date());
+    const endTime = dateFns.parse(createScheduleDto.finalTurnDateTime, 'HH:mm', new Date());
 
-  // Verifica si la duración del turno es menor o igual al tiempo disponible
-  const timeDiff = dateFns.differenceInMinutes(endTime, startTime);
-  if (turnDuration > timeDiff) {
-    throw new Error('La duración del turno excede el tiempo disponible.');
-  }
-  const userFound = await this.userRepository.findOne({where: {id: supplier.id}})
-  const supplierFound = await this.supplierRepository.findOne({ where: { user: userFound as any} });
-
-  const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
-    const schedule = new Schedule();
-    schedule.name = createScheduleDto.name;
-    schedule.hasSign = createScheduleDto.hasSign;
-    schedule.turnDuration = createScheduleDto.turnDuration;
-    schedule.initialTurnDateTime = startTime.toISOString();
-    schedule.finalTurnDateTime = endTime.toISOString();
-    schedule.supplier = supplierFound;
-    schedule.active = true;
-    const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
-
-    for (const selectedDate of dates) {
-      const selectedDayOfWeek = dateFns.format(new Date(selectedDate), 'EEEE', { locale: es });
-      let capitalizedSelectedDayOfWeek = selectedDayOfWeek.charAt(0).toUpperCase() + selectedDayOfWeek.slice(1);
-      if (capitalizedSelectedDayOfWeek === "Miércoles") {
-        capitalizedSelectedDayOfWeek = "Miercoles";
-      }
-      if (capitalizedSelectedDayOfWeek === "Sábado") {
-        capitalizedSelectedDayOfWeek = "Sabado";
-      }
-      const modifiedDays = days.map(day => {
-        if (day === 'Sunday') {
-          return 'Domingo';
-        } else if (day === 'Monday') {
-          return 'Lunes';
-        } else if (day === 'Tuesday') {
-          return 'Martes';
-        } else if (day === 'Wednesday') {
-          return 'Miercoles';
-        } else if (day === 'Thursday') {
-          return 'Jueves';
-        } else if (day === 'Friday') {
-          return 'Viernes';
-        } else if (day === 'Saturday'){
-          return 'Sabado';
-        }
-      });
-
-      if (modifiedDays.includes(capitalizedSelectedDayOfWeek as any)) {
-        const classDayType = await this.entityManager.findOneOrFail(Type, { where: { name: capitalizedSelectedDayOfWeek } });
-
-        let currentTime = dateFns.setHours(new Date(selectedDate), dateFns.getHours(startTime));
-        currentTime = dateFns.setMinutes(currentTime, dateFns.getMinutes(startTime));
-
-        while (dateFns.isBefore(currentTime, dateFns.setHours(new Date(selectedDate), dateFns.getHours(endTime))) || dateFns.isSameMinute(currentTime, dateFns.setHours(new Date(selectedDate), dateFns.getHours(endTime)))) {
-          const newTurn = new Turn();
-          const newTurnStatus = new TurnStatus();
-          newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
-          newTurnStatus.turnStatusType = await this.validateTypeTurnStatus();
-          newTurn.dateFrom = currentTime as any;
-          newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
-          newTurn.classDayType = classDayType;
-          newTurn.schedule = savedSchedule;
-          newTurn.turnStatus = [newTurnStatus];
-
-          await transactionalEntityManager.save(TurnStatus, newTurnStatus);
-          await transactionalEntityManager.save(Turn, newTurn);
-
-          currentTime = dateFns.addMinutes(currentTime, turnDuration);
-        }
-      }
+    // Verifica si la duración del turno es menor o igual al tiempo disponible
+    const timeDiff = dateFns.differenceInMinutes(endTime, startTime);
+    if (turnDuration > timeDiff) {
+      throw new Error('La duración del turno excede el tiempo disponible.');
     }
+    const userFound = await this.userRepository.findOne({ where: { id: supplier.id } })
+    const supplierFound = await this.supplierRepository.findOne({ where: { user: userFound as any }, relations: { user: true } });
+
+    const savedSchedule = await this.entityManager.transaction(async transactionalEntityManager => {
+      const schedule = new Schedule();
+      schedule.name = createScheduleDto.name;
+      schedule.hasSign = createScheduleDto.hasSign;
+      schedule.turnDuration = createScheduleDto.turnDuration;
+      schedule.initialTurnDateTime = startTime.toISOString();
+      schedule.finalTurnDateTime = endTime.toISOString();
+      schedule.supplier = supplierFound;
+      if(alias){
+        schedule.alias = alias;
+      }
+      schedule.active = true;
+      const savedSchedule = await transactionalEntityManager.save(Schedule, schedule);
+
+      for (const selectedDate of dates) {
+        const selectedDayOfWeek = dateFns.format(new Date(selectedDate), 'EEEE', { locale: es });
+        let capitalizedSelectedDayOfWeek = selectedDayOfWeek.charAt(0).toUpperCase() + selectedDayOfWeek.slice(1);
+        if (capitalizedSelectedDayOfWeek === "Miércoles") {
+          capitalizedSelectedDayOfWeek = "Miercoles";
+        }
+        if (capitalizedSelectedDayOfWeek === "Sábado") {
+          capitalizedSelectedDayOfWeek = "Sabado";
+        }
+        const modifiedDays = days.map(day => {
+          if (day === 'Sunday') {
+            return 'Domingo';
+          } else if (day === 'Monday') {
+            return 'Lunes';
+          } else if (day === 'Tuesday') {
+            return 'Martes';
+          } else if (day === 'Wednesday') {
+            return 'Miercoles';
+          } else if (day === 'Thursday') {
+            return 'Jueves';
+          } else if (day === 'Friday') {
+            return 'Viernes';
+          } else if (day === 'Saturday') {
+            return 'Sabado';
+          }
+        });
+
+        if (modifiedDays.includes(capitalizedSelectedDayOfWeek as any)) {
+          const classDayType = await this.entityManager.findOneOrFail(Type, { where: { name: capitalizedSelectedDayOfWeek } });
+
+          let currentTime = dateFns.setHours(new Date(selectedDate), dateFns.getHours(startTime));
+          currentTime = dateFns.setMinutes(currentTime, dateFns.getMinutes(startTime));
+
+          if (turnDuration >= 60) {
+
+            while (dateFns.isBefore(currentTime, dateFns.setHours(new Date(selectedDate), dateFns.getHours(endTime)))) {
+              const newTurn = new Turn();
+              const newTurnStatus = new TurnStatus();
+              newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
+              newTurnStatus.turnStatusType = await this.validateTypeTurnStatus();
+              newTurn.dateFrom = currentTime as any;
+              newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
+              newTurn.classDayType = classDayType;
+              newTurn.schedule = savedSchedule;
+              newTurn.turnStatus = [newTurnStatus];
+              await transactionalEntityManager.save(TurnStatus, newTurnStatus);
+              await transactionalEntityManager.save(Turn, newTurn);
+              const newAlert = new Alert();
+              newAlert.description = `Nueva alerta para agenda de: ${supplierFound.user.firstName}`
+              newAlert.name = `Alerta para agenda de: ${supplierFound.user.firstName}`
+              newAlert.turn = newTurn;
+              await transactionalEntityManager.save(Alert, newAlert);
+              const newSign = new Sign();
+              const newSignStatus = new SignStatus();
+              newSignStatus.statusRegistrationDateTime = this.formatDate(new Date());
+              newSignStatus.signStatusType = await this.validateSignTurnStatus();
+              newSign.signStatus = [newSignStatus];
+              newSign.createDateTime = this.formatDate(new Date());
+              newSign.initialAmount = createScheduleDto.sign
+              newSign.turn = newTurn;
+              await transactionalEntityManager.save(SignStatus, newSignStatus)
+              await transactionalEntityManager.save(Sign, newSign)
+              currentTime = dateFns.add(currentTime, { minutes: turnDuration });
+            }
+          } else {
+
+            const endTimeLimit = dateFns.setHours(
+              dateFns.setMinutes(new Date(selectedDate), dateFns.getMinutes(endTime)),
+              dateFns.getHours(endTime)
+            );
+
+            while (currentTime < endTimeLimit) {
+              const newTurn = new Turn();
+              const newTurnStatus = new TurnStatus();
+              newTurnStatus.statusRegistrationDateTime = this.formatDate(new Date());
+              newTurnStatus.turnStatusType = await this.validateTypeTurnStatus();
+              newTurn.dateFrom = currentTime as any;
+              newTurn.dateTo = dateFns.addMinutes(currentTime, turnDuration) as any;
+              newTurn.classDayType = classDayType;
+              newTurn.schedule = savedSchedule;
+              newTurn.turnStatus = [newTurnStatus];
+              await transactionalEntityManager.save(TurnStatus, newTurnStatus);
+              await transactionalEntityManager.save(Turn, newTurn);
+              const newAlert = new Alert();
+              newAlert.description = `Nueva alerta para agenda de: ${supplierFound.user.firstName}`
+              newAlert.name = `Alerta para agenda de: ${supplierFound.user.firstName}`
+              newAlert.turn = newTurn
+              await transactionalEntityManager.save(Alert, newAlert)
+              const newSign = new Sign();
+              const newSignStatus = new SignStatus();
+              newSignStatus.statusRegistrationDateTime = this.formatDate(new Date());
+              newSignStatus.signStatusType = await this.validateSignTurnStatus();
+              newSign.signStatus = [newSignStatus];
+              newSign.createDateTime = this.formatDate(new Date());
+              newSign.initialAmount = createScheduleDto.sign
+              newSign.turn = newTurn;
+              await transactionalEntityManager.save(SignStatus, newSignStatus)
+              await transactionalEntityManager.save(Sign, newSign)
+              currentTime = dateFns.add(currentTime, { minutes: turnDuration });
+            }
+
+          }
+        }
+      }
+
+      return savedSchedule;
+    });
 
     return savedSchedule;
-  });
-
-  return savedSchedule;
-}
+  }
 
   async validateTypeTurnStatus() {
     const turnTypeStatus = await this.typeService.findTypeByCodeJust('TurnoDisponible')
     return turnTypeStatus
+  }
+
+  async validateSignTurnStatus(){
+    const signTypeStatus = await this.typeService.findTypeByCodeJust('SeñaAPagar')
+    return signTypeStatus
+  }
+
+  async validateSignTurnStatus2(){
+    const signTypeStatus = await this.typeService.findTypeByCodeJust('SeñaPagada')
+    return signTypeStatus
   }
 
   async findAll() {
@@ -140,7 +209,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
 
   async findAllForSupplier() {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-      .select(['Schedule.id', 'Schedule.name'])
+      .select(['Schedule.id', 'Schedule.name', 'Schedule.hasSign'])
       .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
       .leftJoin('Schedule.supplier', 'Supplier')
       .leftJoin('Supplier.user', 'User')
@@ -151,10 +220,11 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
 
   async findOne(id: number) {
     const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
-      .select(['Schedule.id', 'Schedule.name'])
+      .select(['Schedule.id', 'Schedule.name', 'Schedule.alias'])
       .addSelect(['Turn.id', 'Turn.dateFrom', 'Turn.dateTo', 'Turn.classDayType'])
       .addSelect(['Type.id', 'Type.name'])
       .leftJoin('Schedule.turn', 'Turn')
+      .leftJoinAndSelect('Turn.sign', 'sign')
       .leftJoin('Turn.classDayType', 'Type')
       .leftJoin('Schedule.supplier', 'Supplier')
       .where('Schedule.id = :id', { id: id })
@@ -172,7 +242,7 @@ async createSchedule(createScheduleDto: CreateScheduleDto) {
   }
 
   async remove(updateScheduleDto: UpdateScheduleDto) {
-    const schedule = await this.scheduleRepository.findOne({where: {id: updateScheduleDto.id}})
+    const schedule = await this.scheduleRepository.findOne({ where: { id: updateScheduleDto.id } })
     if (!schedule) {
       return new HttpException(
         {

@@ -6,6 +6,7 @@ import { Report } from "./report.entity";
 import { Schedule } from "./schedule.entity";
 import { TurnStatus } from "./turnStatus.entity";
 import { Type } from "./type.entity";
+import { Sign } from "./sign.entity";
 
 @Entity('Turn')
 export class Turn {
@@ -19,8 +20,11 @@ export class Turn {
     @Column({ name: 'DateTo', type: 'datetime', nullable: true })
     dateTo: string;
 
-    @OneToOne(() => Alert, (alert) => alert.turn)
+    @OneToOne(() => Alert, (alert) => alert.turn, {cascade: true})
     alert: Alert
+
+    @OneToOne(() => Sign, (sign) => sign.turn)
+    sign: Sign
 
     @OneToOne(() => Report, (report) => report.turn)
 	report: Report;

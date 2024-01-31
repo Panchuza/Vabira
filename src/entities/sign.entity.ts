@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Product } from "./product.entity";
 import { Turn } from "./turn.entity";
 import { User } from "./user.entity";
@@ -22,7 +22,7 @@ export class Sign {
     @JoinColumn({ name: 'Turn_Id' })
     turn: Turn
 
-    @OneToOne(() => SignStatus, (signStatus) => signStatus.sign)
+    @OneToMany(() => SignStatus, (signStatus) => signStatus.sign, {cascade: true})
     signStatus: SignStatus[]
 
     @OneToOne(() => User, (user) => user.sign)

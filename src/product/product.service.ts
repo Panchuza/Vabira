@@ -36,15 +36,15 @@ export class ProductService {
       let currentCode: any = code; 
 
       for (let i = 0; i < quantity; i++) {
-          const productDto = await this.productRepository.create({
-              code: currentCode,
-              codeForBatch: lastBatchValue + 1,
-              quantity: quantity,
-              active: true,
-              ...toCreate,
-          });
-          createdProducts.push(productDto);
-          currentCode++;
+        const cod = `${+code + i}`
+        const productDto = await this.productRepository.create({
+          code: cod,
+          codeForBatch: lastBatchValue + 1,
+          quantity: quantity,
+          active: true,
+          ...toCreate,
+        });
+        createdProducts.push(productDto);
       }
       const supplierFound = await this.supplierRepository.findOne({ where: { id: createProductDto.supplierId.id } })
       let results: Product[] = [];

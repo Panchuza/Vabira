@@ -38,9 +38,19 @@ export class TurnController {
     return this.turnService.findAproveTurnsForSchedule(scheduleId);
   }
 
+  @Get('findAproveWithSignTurnsForSchedule')
+  findAproveWithSignTurnsForSchedule(@Query('scheduleId') scheduleId: string) {
+    return this.turnService.findAproveWithSignTurnsForSchedule(scheduleId);
+  }
+
   @Patch('assignTurn')
   assignTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.assignTurn(updateTurnDto);
+  }
+
+  @Patch('turnForPay')
+  turnForPay(@Body() idTurno: number) {
+    return this.turnService.turnForPay(idTurno);
   }
 
   @Patch('aproveTurn')
