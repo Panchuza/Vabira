@@ -5,16 +5,15 @@ import {
   HttpException
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
-import { RegisterDto } from './dto/register.dto';
-
+import { hash } from 'bcrypt';
+import { EntityManager, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcryptjs from 'bcryptjs';
 import { LoginDto } from './dto/login.dto';
 import { EmailDto } from './dto/email.dto';
 import { EmailService } from 'src/email/email.service';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/entities/user.entity';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +22,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
   ) { }
 
   async loginUser(loginAuthDto: LoginDto) {
@@ -114,5 +115,35 @@ export class AuthService {
     const decodedToken: any = this.jwtService.decode(tokenFinal);
     const access = decodedToken.access;
     return access;
+  }
+
+  async restorePassword(email: string, password: string, validationCode: boolean){
+    if (validationCode == false) {
+      throw new BadRequestException('El código verificador es incorrecto');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: {
+        email: email
+      }
+    })
+
+    const plainToHash = await hash(password, 10);
+
+    const userToUpdate = await this.userRepository.preload({
+      id: user.id,
+      password: plainToHash
+    })
+
+    let userFinal;
+    await this.entityManager.transaction(async (transaction) => {
+      try {
+        userFinal = await transaction.save(userToUpdate);
+      } catch (error) {
+        throw new Error(error);
+      }
+    });
+
+    return userFinal;
   }
 }

@@ -28,9 +28,14 @@ export class AuthController {
     return this.authService.checkToken(token);
   }
 
-  @Post('sendEmail')
+  @Post('/sendEmail')
   sendEmail(@Body() emailDto: EmailDto){
     return this.authService.sendEmailCode(emailDto)
+  }
+
+  @Post('/restorePassword')
+  restorePassword(@Query('email') email: string, @Query('password') password: string, @Query('validationCode') validationCode: boolean){
+    return this.authService.restorePassword(email, password, validationCode)
   }
 
   @Get('validateCode')
