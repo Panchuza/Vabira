@@ -58,6 +58,16 @@ export class TurnController {
     return this.turnService.aproveTurn(updateTurnDto);
   }
 
+  @Patch('aproveSignTurn')
+  aproveSignTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.aproveSignTurn(updateTurnDto);
+  }
+
+  @Patch('desaproveSignTurn')
+  desaproveSignTurn(@Body() updateTurnDto: UpdateTurnDto) {
+    return this.turnService.desaproveSignTurn(updateTurnDto);
+  }
+
   @Patch('desaproveTurn')
   desaproveTurn(@Body() updateTurnDto: UpdateTurnDto) {
     return this.turnService.desaproveTurn(updateTurnDto);
