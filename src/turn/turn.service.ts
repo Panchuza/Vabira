@@ -120,10 +120,6 @@ export class TurnService {
       .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
       .getMany()
 
-    // if (turns.length === 0) {
-    //   throw new BadRequestException('No existen turnos reservados');
-    // }
-
     const formattedTurns = turns.map(turn => ({
       ...turn,
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
@@ -172,10 +168,6 @@ export class TurnService {
       .getMany()
 
 
-    // if (turns.length === 0) {
-    //   throw new BadRequestException('No existen turnos disponibles');
-    // }
-
     const formattedTurns = turns.map(turn => ({
       ...turn,
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
@@ -222,10 +214,6 @@ export class TurnService {
       .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
       .getMany()
 
-
-    // if (turns.length === 0) {
-    //   throw new BadRequestException('No existen turnos disponibles');
-    // }
 
     const formattedTurns = turns.map(turn => ({
       ...turn,
@@ -275,10 +263,6 @@ export class TurnService {
       .getMany()
 
 
-    // if (turns.length === 0) {
-    //   throw new BadRequestException('No existen turnos disponibles');
-    // }
-
     const formattedTurns = turns.map(turn => ({
       ...turn,
       dateFrom: moment(turn.dateFrom).format('hh:mm A'),
@@ -289,7 +273,6 @@ export class TurnService {
     return formattedTurns;
   }
   async findAproveWithSignTurnsForSchedule(scheduleId: string) {
-    const statusTurn = await this.validateTypeTurnStatus2()
     const statusSign = await this.validateTypeSignStatus()
     const turns = await this.turnRepository.createQueryBuilder('Turn')
       .select(['Turn.id', 'Turn.dateTo', 'Turn.dateFrom', 'Turn.classDayType', 'Turn.schedule', 'Turn.client'])
@@ -325,15 +308,10 @@ export class TurnService {
         'turnStatus.turnStatusType',
         'turnStatusType',
       )
-      // .where('turnStatusType.id = :status', { status: statusTurn.id })
       .where('signStatusType.id = :statusSign', { statusSign: statusSign.id })
       .andWhere('Turn.schedule = :scheduleId', { scheduleId: scheduleId })
       .getMany()
 
-
-    // if (turns.length === 0) {
-    //   throw new BadRequestException('No existen turnos disponibles');
-    // }
 
     const formattedTurns = turns.map(turn => ({
       ...turn,
@@ -404,7 +382,6 @@ export class TurnService {
 
     try {
       let turnResult: any;
-      // let alertResult: any;
 
       await this.entityManager.transaction(async (transaction) => {
         try {
