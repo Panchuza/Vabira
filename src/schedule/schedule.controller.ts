@@ -18,8 +18,8 @@ export class ScheduleController {
   }
 
   @Get('findAllForSupplier')
-  findAllForSupplier() {
-    return this.scheduleService.findAllForSupplier();
+  findAllForSupplier(@Query('id') id: string, @Query('userType') userType: string) {
+    return this.scheduleService.findAllForSupplier(+id, userType);
   }
 
   @Get('findOne')

@@ -210,7 +210,7 @@ export class UsersService {
   }
 
   async findOneByEmailForNotification(email: string) {
-    const user = await this.userRepository.createQueryBuilder('User')
+    let user = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
         , 'User.dni', 'User.dateOfBirth', 'User.roles'])
       .leftJoinAndSelect('User.supplier', 'supplier')
@@ -221,8 +221,23 @@ export class UsersService {
       .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
       .where('User.email = :email', { email: email })
       .andWhere('User.active = 1')
-      .andWhere('turnStatusType.code = :code OR turnStatusType.code = :senaCode', { code: 'TurnoReservado', senaCode: 'SeñaEsperandoAprobacion'  })
+      .andWhere('(turnStatusType.code = :code OR turnStatusType.code = :senaCode)', { code: 'TurnoReservado', senaCode: 'SeñaEsperandoAprobacion'  })
       .getOne()
+
+      if(!user){
+        user = await this.userRepository.createQueryBuilder('User')
+      .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
+        , 'User.dni', 'User.dateOfBirth', 'User.roles'])
+      .leftJoinAndSelect('User.supplier', 'supplier')
+      .leftJoinAndSelect('supplier.schedule', 'schedule')
+      .leftJoinAndSelect('schedule.turn', 'turn')
+      .leftJoinAndSelect('turn.alert', 'alert')
+      .leftJoinAndSelect('turn.turnStatus', 'turnStatus')
+      .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
+      .where('User.email = :email', { email: email })
+      .andWhere('User.active = 1')
+      .getOne()
+      }
     return user;
 
   }

@@ -39,7 +39,7 @@ export class AlertService {
       .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
       .leftJoinAndSelect('schedule.supplier', 'supplier')
       .where('supplier.id = :supplierId', { supplierId: id })
-      .andWhere('turnStatusType.code = :code OR turnStatusType.code = :senaCode', { code: 'TurnoReservado', senaCode: 'SeñaEsperandoAprobacion'  } )
+      .andWhere('(turnStatusType.code = :code OR turnStatusType.code = :senaCode)', { code: 'TurnoReservado', senaCode: 'SeñaEsperandoAprobacion'  } )
       .getMany();
   
     return alerts;
