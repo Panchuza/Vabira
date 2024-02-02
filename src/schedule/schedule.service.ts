@@ -207,15 +207,18 @@ export class ScheduleService {
     return schedule;
   }
 
-  async findAllForSupplier() {
-    const schedule = await this.scheduleRepository.createQueryBuilder('Schedule')
+  async findAllForSupplier(id: number, userType: string) {
+    const schedule = this.scheduleRepository.createQueryBuilder('Schedule')
       .select(['Schedule.id', 'Schedule.name', 'Schedule.hasSign'])
       .addSelect(['Supplier.id', 'User.username', 'User.firstName', 'User.lastName'])
       .leftJoin('Schedule.supplier', 'Supplier')
       .leftJoin('Supplier.user', 'User')
       .where('Schedule.active = 1')
-      .getMany()
-    return schedule;
+      if(userType === 'supplier'){
+        schedule.andWhere('User.id = :id', {id: id})
+      } 
+      const res = await schedule.getMany()
+    return res;
   }
 
   async findOne(id: number) {
