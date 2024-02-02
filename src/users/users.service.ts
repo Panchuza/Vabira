@@ -202,6 +202,10 @@ export class UsersService {
     const user = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
         , 'User.dni', 'User.dateOfBirth', 'User.roles'])
+      .leftJoinAndSelect('User.profileUser', 'profileUser')
+      .leftJoinAndSelect('profileUser.profile', 'profile')
+      .leftJoinAndSelect('profile.accessProfile', 'accessProfile')
+      .leftJoinAndSelect('accessProfile.access', 'access')
       .where('User.email = :email', { email: email })
       .andWhere('User.active = 1')
       .getOne()

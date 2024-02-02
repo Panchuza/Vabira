@@ -93,7 +93,7 @@ export class User {
   @OneToOne(() => Sign, (sign) => sign.user)
   sign: Sign;
 
-  @OneToMany(profileUser => ProfileUser, (profileUser) => profileUser.user)
+  @OneToMany(() => ProfileUser, (profileUser) => profileUser.user, {cascade: true})
   profileUser: ProfileUser[]
 
   @OneToOne(() => Supplier, (supplier) => supplier.user)
@@ -104,8 +104,5 @@ export class User {
 
   @OneToOne(() => SignStatus, (signStatus) => signStatus.statusRegistrationUser)
   signStatus: SignStatus;
-
-  @ManyToMany(() => Profiles, (profile) => profile.profileUser, { cascade: true })
-  Profiles: Profiles[]
 
 }
