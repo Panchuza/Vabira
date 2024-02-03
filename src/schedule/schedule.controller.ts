@@ -5,7 +5,7 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
 @Controller('schedule')
 export class ScheduleController {
-  constructor(private readonly scheduleService: ScheduleService) {}
+  constructor(private readonly scheduleService: ScheduleService,) {}
 
   @Post('create')
   create(@Body() createScheduleDto: CreateScheduleDto) {
@@ -30,5 +30,15 @@ export class ScheduleController {
   @Patch('/delete')
   remove(@Body() updateScheduleDto: UpdateScheduleDto) {
     return this.scheduleService.remove(updateScheduleDto);
+  }
+  @Post('syncWithGoogleCalendar')
+  async syncWithGoogleCalendar(@Body() data: { tokens: any; reservedTurns: any }) {
+    // Verifica la autenticidad de los tokens (opcional)
+    // Puedes almacenar los tokens en la base de datos si es necesario
+
+    const reservedTurns = data.reservedTurns; // Ajusta según tu estructura de datos
+    await this.scheduleService.syncWithGoogleCalendar(reservedTurns);
+
+    return { message: 'Sincronización exitosa' };
   }
 }
