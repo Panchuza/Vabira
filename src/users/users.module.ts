@@ -8,11 +8,13 @@ import { ProfileUser } from 'src/entities/profileUser.entity';
 import { HttpModule } from '@nestjs/axios';
 import { JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { AccessProfile } from 'src/entities/accessProfile.entity';
+import { Access } from 'src/entities/access.entity';
 // users.module.ts
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([User, Profiles, ProfileUser]),
+    TypeOrmModule.forFeature([User, Profiles, ProfileUser, AccessProfile, Access]),
     HttpModule.register({
       timeout: 50000,
       maxRedirects: 5,

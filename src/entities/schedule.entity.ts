@@ -24,7 +24,7 @@ export class Schedule {
     @Column({ name: 'TurnDuration', type: 'int', nullable: true })
     turnDuration: number;
 
-    @Column({ name: 'HasSign', type: 'bit', nullable: true })
+    @Column({ name: 'HasSign', nullable: true })
     hasSign: boolean;
 
     @OneToMany(() => Turn, (turn) => turn.schedule, {cascade: true})

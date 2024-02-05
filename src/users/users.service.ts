@@ -2,7 +2,7 @@ import { BadRequestException, HttpException, HttpStatus, Injectable, Unauthorize
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { DbException } from 'src/exception/dbException';
@@ -11,6 +11,8 @@ import { LoginDto } from 'src/auth/dto/login.dto';
 import { JwtPayload } from 'src/auth/interfaces';
 import { Profiles } from 'src/entities/profile.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
+import { AccessProfile } from 'src/entities/accessProfile.entity';
+import { Access } from 'src/entities/access.entity';
 
 
 @Injectable()
@@ -24,6 +26,10 @@ export class UsersService {
     private profileRepository: Repository<Profiles>,
     @InjectRepository(ProfileUser)
     private profileUserRepository: Repository<ProfileUser>,
+    @InjectRepository(AccessProfile)
+    private accessProfileRepository: Repository<AccessProfile>,
+    @InjectRepository(Access)
+    private accessRepository: Repository<Access>,
     private jwtService: JwtService,
     @InjectEntityManager()
     private entityManager: EntityManager,
@@ -173,6 +179,10 @@ export class UsersService {
     const users = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
         , 'User.dni', 'User.dateOfBirth', 'User.active', 'User.roles'])
+      .leftJoinAndSelect('User.profileUser', 'profileUser')
+      .leftJoinAndSelect('profileUser.profile', 'profile')
+      .leftJoinAndSelect('profile.accessProfile', 'accessProfile')
+      .leftJoinAndSelect('accessProfile.access', 'access')
       .where('User.active = 1')
       .getMany()
     return users;
@@ -182,6 +192,10 @@ export class UsersService {
     const user = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
         , 'User.dni', 'User.dateOfBirth', 'User.roles'])
+      .leftJoinAndSelect('User.profileUser', 'profileUser')
+      .leftJoinAndSelect('profileUser.profile', 'profile')
+      .leftJoinAndSelect('profile.accessProfile', 'accessProfile')
+      .leftJoinAndSelect('accessProfile.access', 'access')
       .where('User.id = :id', { id: id })
       .andWhere('User.active = 1')
       .getOne()
@@ -225,29 +239,29 @@ export class UsersService {
       .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
       .where('User.email = :email', { email: email })
       .andWhere('User.active = 1')
-      .andWhere('(turnStatusType.code = :code OR turnStatusType.code = :senaCode)', { code: 'TurnoReservado', senaCode: 'SeñaEsperandoAprobacion'  })
+      .andWhere('(turnStatusType.code = :code OR turnStatusType.code = :senaCode)', { code: 'TurnoReservado', senaCode: 'SeñaEsperandoAprobacion' })
       .getOne()
 
-      if(!user){
-        user = await this.userRepository.createQueryBuilder('User')
-      .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
-        , 'User.dni', 'User.dateOfBirth', 'User.roles'])
-      .leftJoinAndSelect('User.supplier', 'supplier')
-      .leftJoinAndSelect('supplier.schedule', 'schedule')
-      .leftJoinAndSelect('schedule.turn', 'turn')
-      .leftJoinAndSelect('turn.alert', 'alert')
-      .leftJoinAndSelect('turn.turnStatus', 'turnStatus')
-      .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
-      .where('User.email = :email', { email: email })
-      .andWhere('User.active = 1')
-      .getOne()
-      }
+    if (!user) {
+      user = await this.userRepository.createQueryBuilder('User')
+        .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
+          , 'User.dni', 'User.dateOfBirth', 'User.roles'])
+        .leftJoinAndSelect('User.supplier', 'supplier')
+        .leftJoinAndSelect('supplier.schedule', 'schedule')
+        .leftJoinAndSelect('schedule.turn', 'turn')
+        .leftJoinAndSelect('turn.alert', 'alert')
+        .leftJoinAndSelect('turn.turnStatus', 'turnStatus')
+        .leftJoinAndSelect('turnStatus.turnStatusType', 'turnStatusType')
+        .where('User.email = :email', { email: email })
+        .andWhere('User.active = 1')
+        .getOne()
+    }
     return user;
 
   }
 
   async update(updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({ where: { id: updateUserDto.id, active: true } });
+    const user = await this.userRepository.findOne({ where: { id: updateUserDto.id, active: true }, relations: { profileUser: { profile: { accessProfile: { access: true } } } } });
     if (!user) {
       throw new HttpException(
         {
@@ -256,6 +270,47 @@ export class UsersService {
         },
         HttpStatus.NOT_FOUND,
       );
+    }
+    if (updateUserDto.accesses) {
+      console.log(updateUserDto.accesses);
+
+      const yaTieneAccesos = [...new Set(user.profileUser[0].profile.accessProfile.map(accessProfile => accessProfile.access.code))];
+
+      const accesosAgregar = [...new Set(updateUserDto.accesses.filter(accessCode => !yaTieneAccesos.includes(accessCode)))];
+      const accesosEliminar = [...new Set(yaTieneAccesos.filter(accessCode => !updateUserDto.accesses.includes(accessCode)))];
+
+      if (accesosAgregar.length > 0) {
+        const accessCodesToAdd = new Set(accesosAgregar);
+
+        const accessProfilesAgregar = await Promise.all(Array.from(accessCodesToAdd).map(async accessCode => {
+          const accessProfile = new AccessProfile();
+          accessProfile.profile = user.profileUser[0].profile;
+          accessProfile.access = await this.entityManager.findOne(Access, { where: { code: accessCode } });
+          return accessProfile;
+        }));
+
+        await this.entityManager.save(AccessProfile, accessProfilesAgregar);
+      }
+
+      if (accesosEliminar.length > 0) {
+        const accessProfilesEliminar = await this.accessProfileRepository.createQueryBuilder('accessProfile')
+          .leftJoinAndSelect('accessProfile.profile', 'profile')
+          .leftJoinAndSelect('accessProfile.access', 'access')
+          .where('profile.id = :profileId', { profileId: user.profileUser[0].profile.id })
+          .andWhere('access.code IN (:...accessCodes)', { accessCodes: accesosEliminar })
+          .getMany();
+
+          console.log('accessProfilesEliminar: ', accessProfilesEliminar);
+        // Filtrar accesosEliminar para incluir solo aquellos que ya existen en la base de datos
+        const accessCodesToDelete = accessProfilesEliminar.map(accessProfile => accessProfile.access.code);
+
+        const finalAccessesToDelete = accessCodesToDelete.filter(accessCode => !updateUserDto.accesses.includes(accessCode));
+        console.log('accessCodesToDelete: ', accessCodesToDelete);
+        console.log('finalAccessesToDelete: ', finalAccessesToDelete);
+
+        // Ahora, elimina los accesos finales
+        await this.accessProfileRepository.remove(accessProfilesEliminar.filter(accessProfile => finalAccessesToDelete.includes(accessProfile.access.code)));
+      }
     }
 
     // Verifica si el usuario está intentando cambiar el username y si el nuevo valor es diferente
@@ -306,22 +361,22 @@ export class UsersService {
       }
     }
 
- // Verificar la contraseña antigua
- if (updateUserDto.oldPassword && !bcrypt.compareSync(updateUserDto.oldPassword, user.password)) { //
-  console.error('Error: La contraseña antigua proporcionada no es válida');
-  throw new HttpException(
-    {
-      status: HttpStatus.BAD_REQUEST,
-      error: 'La contraseña antigua proporcionada no es válida',
-    },
-    HttpStatus.BAD_REQUEST,
-  );
-}
+    // Verificar la contraseña antigua
+    if (updateUserDto.oldPassword && !bcrypt.compareSync(updateUserDto.oldPassword, user.password)) { //
+      console.error('Error: La contraseña antigua proporcionada no es válida');
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: 'La contraseña antigua proporcionada no es válida',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
 
-if (updateUserDto.password) {
-  updateUserDto.password = bcrypt.hashSync(updateUserDto.password, 10);
-}
+    if (updateUserDto.password) {
+      updateUserDto.password = bcrypt.hashSync(updateUserDto.password, 10);
+    }
 
 
 
@@ -329,7 +384,7 @@ if (updateUserDto.password) {
     const updatedUser = await this.userRepository.preload({
       id: updateUserDto.id,
       ...updateUserDto,
-      
+
     });
     let newPass = null
     if (updateUserDto?.password) {
