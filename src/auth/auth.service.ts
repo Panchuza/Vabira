@@ -29,6 +29,7 @@ export class AuthService {
 
   async loginUser(loginAuthDto: LoginDto) {
     const { email, password } = loginAuthDto;
+    if(!loginAuthDto.username || !email)throw new HttpException('Debe ingresar el username', 403);
 
     const user = await this.userRepository.findOne({
       relations: [

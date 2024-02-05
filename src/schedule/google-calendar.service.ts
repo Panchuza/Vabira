@@ -13,7 +13,7 @@ export class GoogleCalendarService {
 
   constructor() {
     // Carga la clave privada de la cuenta de servicio
-    const credentials = require('/Users/braulio/Proyecto/GitHub/Vabira/src/schedule/theta-messenger-412914-b763803f2224.json'); // Reemplaza con la ruta correcta
+    const credentials = require('/Users/farana_cstechlab/Documents/GitHub/Vabira/src/schedule/theta-messenger-412914-b763803f2224.json'); // Reemplaza con la ruta correcta
 
     // Crea el cliente de Google con la cuenta de servicio
     const client = new google.auth.JWT({
@@ -52,7 +52,7 @@ export class GoogleCalendarService {
       // const event = {
       //   'summary': 'Google I/O 2015',
       //   'location': '800 Howard St., San Francisco, CA 94103',
-      //   'description': 'A chance to hear more about Google\'s developer products.',
+      //   'description': 'A chance to hear more about Google/'s developer products.',
       //   'start': {
       //     'dateTime': '2024-02-10T09:00:00-07:00',
       //     'timeZone': 'America/Los_Angeles',
