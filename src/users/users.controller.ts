@@ -15,15 +15,15 @@ export class UsersController {
   }
 
   @Get('/all')
-  @RoleProtected(ValidRoles.admin)
-  @Auth()
+  // @RoleProtected(ValidRoles.admin)
+  // @Auth()
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get('/findOne')
-  @RoleProtected(ValidRoles.user)
-  @Auth()
+  // @RoleProtected(ValidRoles.user)
+  // @Auth()
   findOne(@Query('id') id: string) {
     return this.usersService.findOne(+id);
   }

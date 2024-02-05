@@ -12,10 +12,11 @@ import { TurnStatus } from 'src/entities/turnStatus.entity';
 import { User } from 'src/entities/user.entity';
 import { Client } from 'src/entities/client.entity';
 import { SignStatus } from 'src/entities/signStatus.entity';
+import { GoogleCalendarService } from './google-calendar.service';
 
 @Module({
   imports: [ TypeOrmModule.forFeature([Schedule, Turn, Supplier, Type, TurnStatus, User, Client, SignStatus]),],
   controllers: [ScheduleController],
-  providers: [ScheduleService, TurnService, TypeService]
+  providers: [ScheduleService, TurnService, TypeService,GoogleCalendarService]
 })
 export class ScheduleModule {}

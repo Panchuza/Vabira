@@ -37,9 +37,9 @@ export class SaleRecordController {
     // Crea un nuevo documento PDF utilizando pdfkit
     const doc = new PDFDocument();
 
-    const formattedPurchaseDate = format(new Date(saleRecord.saleDateTime), 'dd-MM-yyyy HH:mm:ss');
+    const formattedPurchaseDate = format(new Date(saleRecord.saleDateTime), 'dd-MM-yyyy');
     // Agrega contenido al PDF (ajusta esto según tu estructura de datos)
-    const imagePath = path.join(process.cwd(), 'vabira.jpeg');
+    const imagePath = path.join(process.cwd(), 'logo-t-1.png');
     doc.image(imagePath, { width: 100, height: 100 }); // Ajusta el ancho y alto según tus necesidades
     doc.fontSize(12).text(`Orden de Venta Id: ${saleRecord.id}`);
     doc.fontSize(10).text(`Fecha de Venta: ${formattedPurchaseDate}`);

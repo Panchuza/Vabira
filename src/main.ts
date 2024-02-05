@@ -7,6 +7,7 @@ import { AppModule } from './app.module';
 import { ErrorsInterceptor } from './interceptor/errors.interceptor';
 import { LoggingInterceptor } from './interceptor/logging.interceptor';
 import { urlencoded, json } from 'express';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,
@@ -15,7 +16,13 @@ async function bootstrap() {
       logger: console,
     }
   );
-  app.enableCors();
+  const corsOptions: CorsOptions = {
+    origin: 'http://localhost:4200', // Reemplaza con la URL de tu aplicación Angular
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  };
+
+  app.enableCors(corsOptions);
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalInterceptors(new ErrorsInterceptor());

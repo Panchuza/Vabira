@@ -18,7 +18,7 @@ import { User } from 'src/entities/user.entity';
 import { Alert } from 'src/entities/alert.entity';
 import { Sign } from 'src/entities/sign.entity';
 import { SignStatus } from 'src/entities/signStatus.entity';
-
+import { GoogleCalendarService } from 'src/schedule/google-calendar.service';
 
 @Injectable()
 export class ScheduleService {
@@ -34,6 +34,7 @@ export class ScheduleService {
     @InjectEntityManager()
     private entityManager: EntityManager,
     private readonly typeService: TypeService,
+    private readonly googleCalendarService: GoogleCalendarService,
 
   ) { }
 
@@ -281,4 +282,11 @@ export class ScheduleService {
       ].join(':')
     );
   }
+  async syncWithGoogleCalendar(reservedTurns: any, calendarId: any) {
+    // Implementa la lógica de sincronización aquí
+    await this.googleCalendarService.syncEvents(reservedTurns, calendarId);
+  }
+  //aca esta el problema
+
+  
 }

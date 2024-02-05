@@ -32,6 +32,8 @@ export class ProductService {
         .getRawOne();
 
       const lastBatchValue = lastBatch ? lastBatch.lastBatch || 0 : 0;
+      
+      let currentCode: any = code; 
 
       for (let i = 0; i < quantity; i++) {
         const cod = `${+code + i}`
