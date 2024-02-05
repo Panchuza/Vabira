@@ -8,9 +8,11 @@ import { JwtService } from '@nestjs/jwt';
 import { Supplier } from 'src/entities/supplier.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
 import { Profiles } from 'src/entities/profile.entity';
+import { AccessProfile } from 'src/entities/accessProfile.entity';
+import { Access } from 'src/entities/access.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Supplier, ProfileUser, Profiles])],
+  imports: [TypeOrmModule.forFeature([User, Supplier, ProfileUser, Profiles, AccessProfile, Access])],
   controllers: [SupplierController],
   providers: [SupplierService, UsersService, JwtService]
 })
