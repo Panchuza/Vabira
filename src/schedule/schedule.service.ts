@@ -282,9 +282,9 @@ export class ScheduleService {
       ].join(':')
     );
   }
-  async syncWithGoogleCalendar(reservedTurns: any) {
+  async syncWithGoogleCalendar(reservedTurns: any, calendarId: any) {
     // Implementa la lógica de sincronización aquí
-    await this.googleCalendarService.syncEvents(reservedTurns);
+    await this.googleCalendarService.syncEvents(reservedTurns, calendarId);
   }
   //aca esta el problema
 

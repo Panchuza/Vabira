@@ -32,12 +32,12 @@ export class ScheduleController {
     return this.scheduleService.remove(updateScheduleDto);
   }
   @Post('syncWithGoogleCalendar')
-  async syncWithGoogleCalendar(@Body() data: { tokens: any; reservedTurns: any }) {
-    // Verifica la autenticidad de los tokens (opcional)
-    // Puedes almacenar los tokens en la base de datos si es necesario
+  async syncWithGoogleCalendar(@Body() data: {reservedTurns: any, calendarId: any }) {
 
     const reservedTurns = data.reservedTurns; // Ajusta según tu estructura de datos
-    await this.scheduleService.syncWithGoogleCalendar(reservedTurns);
+    const calendarId = data.calendarId;
+    
+    await this.scheduleService.syncWithGoogleCalendar(reservedTurns, calendarId);
 
     return { message: 'Sincronización exitosa' };
   }
