@@ -449,78 +449,59 @@ export class UsersService {
       newProfileUser.profile = await this.codeProfileSupplier();
       newProfileUser.user = updatedUser;
       updatedUser.profileUser.push(newProfileUser);
-    } else if ((!updateUserDto.roles.includes('supplier')) && (user.roles.includes('supplier'))) {
-      const profile = await this.codeProfileSupplier();
-      // Buscar el ProfileUser asociado al perfil y al usuario
-      const profileUserToDelete = await this.profileUserRepository
-        .createQueryBuilder('profileUser')
-        .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
-        .andWhere('profileUser.user = :userId', { userId: updatedUser.id }) // Utiliza solo el valor id del usuario como parámetro
-        .getOne();
-      // Si se encuentra el ProfileUser, eliminarlo
-      if (profileUserToDelete) {
-        await this.profileUserRepository
-          .createQueryBuilder()
-          .delete()
-          .from(ProfileUser)
-          .where('id = :id', { id: profileUserToDelete.id })
-          .execute();
-      }
-    }
-
-    if ((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))) {
+    } else if ((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))) {
       const newProfileUser = new ProfileUser();
       newProfileUser.profile = await this.codeProfileClient();
       newProfileUser.user = updatedUser; // Asignar el usuario actualizado aquí
       updatedUser.profileUser.push(newProfileUser); // Asignar el nuevo ProfileUser al usuario
-    } else if ((!updateUserDto.roles.includes('client')) && (user.roles.includes('client'))) {
-      const profile = await this.codeProfileClient();
-      // Buscar el ProfileUser asociado al perfil y al usuario
-      const profileUserToDelete = await this.profileUserRepository
-        .createQueryBuilder('profileUser')
-        .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
-        .andWhere('profileUser.user = :userId', { userId: updatedUser.id }) // Utiliza solo el valor id del usuario como parámetro
-        .getOne();
-
-      // Si se encuentra el ProfileUser, eliminarlo
-      if (profileUserToDelete) {
-        await this.profileUserRepository
-          .createQueryBuilder()
-          .delete()
-          .from(ProfileUser)
-          .where('id = :id', { id: profileUserToDelete.id })
-          .execute();
-      }
-
-      if ((updateUserDto.roles.includes('admin')) && (!user.roles.includes('admin'))) {
-        const newProfileUser = new ProfileUser();
-        newProfileUser.profile = await this.codeProfileAdmin();
-        newProfileUser.user = updatedUser; // Asignar el usuario actualizado aquí
-        updatedUser.profileUser.push(newProfileUser)// Asignar el nuevo ProfileUser al usuario
-      } else if ((!updateUserDto.roles.includes('admin')) && (user.roles.includes('admin'))) {
-        const profile = await this.codeProfileAdmin();
-        // Buscar el ProfileUser asociado al perfil y al usuario
-        const profileUserToDelete = await this.profileUserRepository
-          .createQueryBuilder('profileUser')
-          .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
-          .andWhere('profileUser.user = :userId', { userId: updatedUser.id }) // Utiliza solo el valor id del usuario como parámetro
-          .getOne();
-
-        if (profileUserToDelete) {
-          await this.profileUserRepository
-            .createQueryBuilder()
-            .delete()
-            .from(ProfileUser)
-            .where('id = :id', { id: profileUserToDelete.id })
-            .execute();
-        }
-      }
+    } else if ((updateUserDto.roles.includes('admin')) && (!user.roles.includes('admin'))) {
+      const newProfileUser = new ProfileUser();
+      newProfileUser.profile = await this.codeProfileAdmin();
+      newProfileUser.user = updatedUser; // Asignar el usuario actualizado aquí
+      updatedUser.profileUser.push(newProfileUser)// Asignar el nuevo ProfileUser al usuario
     }
 
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
       try {
         userResult = await transaction.save(updatedUser);
+        if ((!updateUserDto.roles.includes('supplier')) && (user.roles.includes('supplier'))) {
+          const profile = await this.codeProfileSupplier();
+          // Buscar el ProfileUser asociado al perfil y al usuario
+          const profileUserToDelete = await this.profileUserRepository
+            .createQueryBuilder('profileUser')
+            .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
+            .andWhere('profileUser.user = :userId', { userId: userResult.id }) // Utiliza solo el valor id del usuario como parámetro
+            .getOne();
+          // Si se encuentra el ProfileUser, eliminarlo
+          if (profileUserToDelete) {
+            await this.profileUserRepository.delete(profileUserToDelete.id); // Elimina el ProfileUser de la base de datos
+          }
+        } else if ((!updateUserDto.roles.includes('client')) && (user.roles.includes('client'))) {
+          const profile = await this.codeProfileClient();
+          // Buscar el ProfileUser asociado al perfil y al usuario
+          const profileUserToDelete = await this.profileUserRepository
+            .createQueryBuilder('profileUser')
+            .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
+            .andWhere('profileUser.user = :userId', { userId: userResult.id }) // Utiliza solo el valor id del usuario como parámetro
+            .getOne();
+
+          // Si se encuentra el ProfileUser, eliminarlo
+          if (profileUserToDelete) {
+            await this.profileUserRepository.delete(profileUserToDelete.id); // Elimina el ProfileUser de la base de datos
+          }
+        } else if ((!updateUserDto.roles.includes('admin')) && (user.roles.includes('admin'))) {
+          const profile = await this.codeProfileAdmin();
+          // Buscar el ProfileUser asociado al perfil y al usuario
+          const profileUserToDelete = await this.profileUserRepository
+            .createQueryBuilder('profileUser')
+            .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
+            .andWhere('profileUser.user = :userId', { userId: userResult.id }) // Utiliza solo el valor id del usuario como parámetro
+            .getOne();
+          if (profileUserToDelete) {
+            await this.profileUserRepository.delete(profileUserToDelete.id); // Elimina el ProfileUser de la base de datos
+          }
+        }
         // delete userResult.password;
       } catch (error) {
         console.log(error);
