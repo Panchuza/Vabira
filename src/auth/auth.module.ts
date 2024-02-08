@@ -14,16 +14,18 @@ import { Profiles } from 'src/entities/profile.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
 import { AccessProfile } from 'src/entities/accessProfile.entity';
 import { Access } from 'src/entities/access.entity';
+import { TypeService } from 'src/type/type.service';
+import { Type } from 'src/entities/type.entity';
 dotenv.config();
 
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, UsersService, EmailService],
+  providers: [AuthService, JwtStrategy, UsersService, EmailService, TypeService],
   imports: [
     ConfigModule,
   
-    TypeOrmModule.forFeature([Profiles, ProfileUser, User, Access, AccessProfile]),
+    TypeOrmModule.forFeature([Profiles, ProfileUser, User, Access, AccessProfile, Type]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
 

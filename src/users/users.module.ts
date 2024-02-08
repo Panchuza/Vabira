@@ -10,18 +10,20 @@ import { JwtService } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AccessProfile } from 'src/entities/accessProfile.entity';
 import { Access } from 'src/entities/access.entity';
+import { TypeService } from 'src/type/type.service';
+import { Type } from 'src/entities/type.entity';
 // users.module.ts
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    TypeOrmModule.forFeature([User, Profiles, ProfileUser, AccessProfile, Access]),
+    TypeOrmModule.forFeature([User, Profiles, ProfileUser, AccessProfile, Access, Type]),
     HttpModule.register({
       timeout: 50000,
       maxRedirects: 5,
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, JwtService],
+  providers: [UsersService, JwtService, TypeService],
   exports: [UsersService], 
 })
 export class UsersModule {}

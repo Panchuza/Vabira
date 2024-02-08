@@ -13,6 +13,8 @@ import { Profiles } from 'src/entities/profile.entity';
 import { ProfileUser } from 'src/entities/profileUser.entity';
 import { AccessProfile } from 'src/entities/accessProfile.entity';
 import { Access } from 'src/entities/access.entity';
+import { UserStatus } from 'src/entities/userStatus.entity';
+import { TypeService } from 'src/type/type.service';
 
 
 @Injectable()
@@ -28,9 +30,8 @@ export class UsersService {
     private profileUserRepository: Repository<ProfileUser>,
     @InjectRepository(AccessProfile)
     private accessProfileRepository: Repository<AccessProfile>,
-    @InjectRepository(Access)
-    private accessRepository: Repository<Access>,
     private jwtService: JwtService,
+    private typeService: TypeService,
     @InjectEntityManager()
     private entityManager: EntityManager,
 
@@ -89,10 +90,16 @@ export class UsersService {
         userDto.active = true;
         userDto.roles = role.toString();
 
+
         let userResult: any;
         await this.entityManager.transaction(async (transaction) => {
           try {
             userResult = await transaction.save(userDto);
+            const newUserStatus = new UserStatus();
+            newUserStatus.statusRegistrationDateTime = this.formatDate(new Date());
+            newUserStatus.userStatusType = await this.validateTypeUserStatusActivo();
+            newUserStatus.user = userResult;
+            await transaction.save(UserStatus, newUserStatus);
             delete userResult.password;
           } catch (error) {
             console.log(error);
@@ -116,6 +123,16 @@ export class UsersService {
       console.log(error);
       throw new DbException("Error de validación", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  async validateTypeUserStatusActivo() {
+    return await this.typeService.findTypeByCodeJust('UsuarioActivo')
+
+  }
+
+  async validateTypeUserStatusLicencia() {
+    return await this.typeService.findTypeByCodeJust('UsuarioInactivoPorVacaciones')
+
   }
 
   async login(loginUserDto: LoginDto) {
@@ -179,10 +196,32 @@ export class UsersService {
     const users = await this.userRepository.createQueryBuilder('User')
       .select(['User.id', 'User.username', 'User.firstName', 'User.lastName', 'User.email'
         , 'User.dni', 'User.dateOfBirth', 'User.active', 'User.roles'])
+      .addSelect(['userStatus.id', 'userStatus.userStatusType', 'userStatus.dateTo'])
+      .addSelect(['userStatusType.id', 'userStatusType.name'])
       .leftJoinAndSelect('User.profileUser', 'profileUser')
       .leftJoinAndSelect('profileUser.profile', 'profile')
       .leftJoinAndSelect('profile.accessProfile', 'accessProfile')
       .leftJoinAndSelect('accessProfile.access', 'access')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select('User.id', 'id')
+            .addSelect('MAX(ss.Id)', 'smax')
+            .from(User, 'User')
+            .leftJoin('User.userStatus', 'ss')
+            .groupBy('User.id'),
+        'sm',
+        'sm.id = User.id',
+      )
+      .leftJoin(
+        'User.userStatus',
+        'userStatus',
+        'userStatus.id = sm.smax',
+      )
+      .leftJoin(
+        'userStatus.userStatusType',
+        'userStatusType',
+      )
       .where('User.active = 1')
       .getMany()
     return users;
@@ -300,7 +339,7 @@ export class UsersService {
           .andWhere('access.code IN (:...accessCodes)', { accessCodes: accesosEliminar })
           .getMany();
 
-          console.log('accessProfilesEliminar: ', accessProfilesEliminar);
+        console.log('accessProfilesEliminar: ', accessProfilesEliminar);
         // Filtrar accesosEliminar para incluir solo aquellos que ya existen en la base de datos
         const accessCodesToDelete = accessProfilesEliminar.map(accessProfile => accessProfile.access.code);
 
@@ -312,6 +351,7 @@ export class UsersService {
         await this.accessProfileRepository.remove(accessProfilesEliminar.filter(accessProfile => finalAccessesToDelete.includes(accessProfile.access.code)));
       }
     }
+
 
     // Verifica si el usuario está intentando cambiar el username y si el nuevo valor es diferente
     if (updateUserDto.username && updateUserDto.username !== user.username) {
@@ -384,8 +424,17 @@ export class UsersService {
     const updatedUser = await this.userRepository.preload({
       id: updateUserDto.id,
       ...updateUserDto,
-
     });
+    if (updateUserDto.dateTo) {
+      const newUserStatus = new UserStatus();
+      newUserStatus.statusRegistrationDateTime = this.formatDate(new Date());
+      newUserStatus.dateTo = updateUserDto.dateTo;
+      newUserStatus.userStatusType = await this.validateTypeUserStatusLicencia();
+      newUserStatus.user = updatedUser;
+      await this.entityManager.save(UserStatus, newUserStatus);
+    } else {
+
+    }
     let newPass = null
     if (updateUserDto?.password) {
       newPass = bcrypt.hashSync(updateUserDto.password, 10)
@@ -406,6 +455,31 @@ export class UsersService {
       status: HttpStatus.OK,
       data: userResult,
     };
+  }
+
+  async updateStatus(id: number) {
+    console.log(id);
+    
+    const userFound = await this.userRepository.findOne({ where: { id: id } })
+
+    const newUserStatus = new UserStatus();
+    newUserStatus.statusRegistrationDateTime = this.formatDate(new Date());
+    newUserStatus.userStatusType = await this.validateTypeUserStatusActivo();
+    newUserStatus.user = userFound;
+
+    try {
+      await this.entityManager.transaction(async (transaction) => {
+        try {
+          await transaction.save(newUserStatus);
+        } catch (error) {
+          console.log(error);
+          throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+      });
+    } catch (error){
+      console.log(error);
+      throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   async remove(updateUserDto: UpdateUserDto) {
