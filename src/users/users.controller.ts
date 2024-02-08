@@ -45,6 +45,11 @@ export class UsersController {
     return this.usersService.update(updateUserDto);
   }
 
+  @Patch('/updateStatus')
+  updateStatus(@Query('id') id: string) {
+    return this.usersService.updateStatus(+id);
+  }
+
   @Patch('/delete')
   remove(@Body() updateUserDto: UpdateUserDto) {
     return this.usersService.remove(updateUserDto);

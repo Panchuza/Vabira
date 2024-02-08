@@ -11,6 +11,7 @@ import { SignStatus } from './signStatus.entity';
 import { Sign } from './sign.entity';
 import { TurnStatus } from './turnStatus.entity';
 import { ProfileUser } from './profileUser.entity';
+import { UserStatus } from './userStatus.entity';
 
 @Entity({ name: "Users" })
 export class User {
@@ -104,5 +105,8 @@ export class User {
 
   @OneToOne(() => SignStatus, (signStatus) => signStatus.statusRegistrationUser)
   signStatus: SignStatus;
+
+  @OneToMany(() => UserStatus, (userStatus) => userStatus.user, { cascade: true, eager: true })
+	userStatus: UserStatus[];
 
 }

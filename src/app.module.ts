@@ -25,7 +25,7 @@ import { FaqModule } from './faq/faq.module';
 import { AlertModule } from './alert/alert.module';
 import { SaleRecordModule } from './sale-record/sale-record.module';
 import { PurchaseRecordModule } from './purchase-record/purchase-record.module';
-
+import { GoogleAuthModule } from './google-auth/google-auth.module'; // Nuevo módulo para la autenticación
 
 const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
 
@@ -63,6 +63,7 @@ const envFilePath: string = getEnvPath(`${__dirname}/../common/envs`);
     AlertModule,
     SaleRecordModule,
     PurchaseRecordModule,
+    GoogleAuthModule
   ],
   controllers: [AppController],
   providers: [AppService,

@@ -31,6 +31,7 @@ import { Continent } from "src/entities/continent.entity";
 import { Country } from "src/entities/country.entity";
 import { PoliticalDivision } from "src/entities/politicalDivision.entity";
 import { Region } from "src/entities/region.entity";
+import { UserStatus } from "src/entities/userStatus.entity";
 
 const dest = "dist/common/envs/";
 const env: string | undefined = process.env.NODE_ENV;
@@ -51,7 +52,7 @@ export const Config: DataSourceOptions = {
   database: process.env.DATABASE_NAME,
   entities: [Access, Address, AccessProfile, Alert, Client, ClientAddress, ClientStatus, Continent, Country, Faq, PoliticalDivision, Product, Profiles, ProfileUser, PurchaseRecord, Region, Report
     , SaleRecord, Schedule, Sign, SignStatus, Supplier, SupplierStatus, Turn, Turnero
-, TurnStatus, Type, TypeConfig, User],
+, TurnStatus, Type, TypeConfig, User, UserStatus],
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   migrationsRun: false,
   synchronize: false,

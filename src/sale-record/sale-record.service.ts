@@ -72,7 +72,7 @@ export class SaleRecordService {
 
 
   async findAll() {
-    const products = await this.saleRecordRepository.find({relations: {client:{user: true}, supplier:{user: true}}})
+    const products = await this.saleRecordRepository.find({relations: {client:{user: true}, supplier:{user: true}, product: true}})
     return products
   }
 

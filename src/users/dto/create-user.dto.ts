@@ -33,5 +33,4 @@ export class CreateUserDto {
     @IsOptional()
     dateOfBirth: string;
 
-
 }

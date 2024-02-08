@@ -10,10 +10,12 @@ import { ProfileUser } from 'src/entities/profileUser.entity';
 import { Profiles } from 'src/entities/profile.entity';
 import { AccessProfile } from 'src/entities/accessProfile.entity';
 import { Access } from 'src/entities/access.entity';
+import { TypeService } from 'src/type/type.service';
+import { Type } from 'src/entities/type.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Supplier, ProfileUser, Profiles, AccessProfile, Access])],
+  imports: [TypeOrmModule.forFeature([User, Supplier, ProfileUser, Profiles, AccessProfile, Access, Type])],
   controllers: [SupplierController],
-  providers: [SupplierService, UsersService, JwtService]
+  providers: [SupplierService, UsersService, JwtService, TypeService]
 })
 export class SupplierModule {}

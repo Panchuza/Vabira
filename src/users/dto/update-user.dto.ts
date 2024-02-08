@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateUserDto } from './create-user.dto';
 import { IsOptional } from 'class-validator';
+import { ProfileUser } from 'src/entities/profileUser.entity';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
 
@@ -10,5 +11,9 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     oldPassword?: string; 
     @IsOptional()
     accesses: string []; 
+    @IsOptional()
+    dateTo: string
+    @IsOptional()
+    profileUser?: ProfileUser[]
   }
 
