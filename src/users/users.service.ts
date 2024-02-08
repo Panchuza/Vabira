@@ -185,6 +185,18 @@ export class UsersService {
     }
   }
 
+  async codeProfileSupplier(){
+    return await this.profileRepository.findOne({where: {name: 'Supplier'}})
+  }
+
+  async codeProfileAdmin(){
+    return await this.profileRepository.findOne({where: {name: 'Admin'}})
+  }
+
+  async codeProfileClient(){
+    return await this.profileRepository.findOne({where: {name: 'Client'}})
+  }
+
   async findByEmailWithPassword(email: string) {
     return await this.userRepository.findOne({
       where: { email },
@@ -351,7 +363,7 @@ export class UsersService {
         await this.accessProfileRepository.remove(accessProfilesEliminar.filter(accessProfile => finalAccessesToDelete.includes(accessProfile.access.code)));
       }
     }
-
+    
 
     // Verifica si el usuario está intentando cambiar el username y si el nuevo valor es diferente
     if (updateUserDto.username && updateUserDto.username !== user.username) {
@@ -425,6 +437,7 @@ export class UsersService {
       id: updateUserDto.id,
       ...updateUserDto,
     });
+    
     if (updateUserDto.dateTo) {
       const newUserStatus = new UserStatus();
       newUserStatus.statusRegistrationDateTime = this.formatDate(new Date());
@@ -432,13 +445,28 @@ export class UsersService {
       newUserStatus.userStatusType = await this.validateTypeUserStatusLicencia();
       newUserStatus.user = updatedUser;
       await this.entityManager.save(UserStatus, newUserStatus);
-    } else {
+    } 
 
-    }
     let newPass = null
     if (updateUserDto?.password) {
       newPass = bcrypt.hashSync(updateUserDto.password, 10)
       updatedUser.password = newPass;
+    }
+    if((updateUserDto.roles.includes('supplier')) && (!user.roles.includes('supplier'))){
+      const newProfileUser = new ProfileUser();
+      newProfileUser.profile = await this.codeProfileSupplier()
+      newProfileUser.user = updatedUser
+      await this.entityManager.save(ProfileUser, newProfileUser);
+    } else if ((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))){
+      const newProfileUser = new ProfileUser();
+      newProfileUser.profile = await this.codeProfileClient()
+      newProfileUser.user = updatedUser
+      await this.entityManager.save(ProfileUser, newProfileUser);
+    } else if((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))){
+      const newProfileUser = new ProfileUser();
+      newProfileUser.profile = await this.codeProfileAdmin()
+      newProfileUser.user = updatedUser
+      await this.entityManager.save(ProfileUser, newProfileUser);
     }
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
