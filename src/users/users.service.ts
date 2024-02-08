@@ -185,16 +185,16 @@ export class UsersService {
     }
   }
 
-  async codeProfileSupplier(){
-    return await this.profileRepository.findOne({where: {name: 'Supplier'}})
+  async codeProfileSupplier() {
+    return await this.profileRepository.findOne({ where: { name: 'Supplier' } })
   }
 
-  async codeProfileAdmin(){
-    return await this.profileRepository.findOne({where: {name: 'Admin'}})
+  async codeProfileAdmin() {
+    return await this.profileRepository.findOne({ where: { name: 'Admin' } })
   }
 
-  async codeProfileClient(){
-    return await this.profileRepository.findOne({where: {name: 'Client'}})
+  async codeProfileClient() {
+    return await this.profileRepository.findOne({ where: { name: 'Client' } })
   }
 
   async findByEmailWithPassword(email: string) {
@@ -363,8 +363,6 @@ export class UsersService {
         await this.accessProfileRepository.remove(accessProfilesEliminar.filter(accessProfile => finalAccessesToDelete.includes(accessProfile.access.code)));
       }
     }
-    
-
     // Verifica si el usuario está intentando cambiar el username y si el nuevo valor es diferente
     if (updateUserDto.username && updateUserDto.username !== user.username) {
       // Verifica si ya existe un usuario con el mismo nuevo username
@@ -380,7 +378,6 @@ export class UsersService {
         );
       }
     }
-
     // Verifica si el usuario está intentando cambiar el email y si el nuevo valor es diferente
     if (updateUserDto.email && updateUserDto.email !== user.email) {
       // Verifica si ya existe un usuario con el mismo nuevo email
@@ -396,7 +393,6 @@ export class UsersService {
         );
       }
     }
-
     // Verifica si el usuario está intentando cambiar el dni y si el nuevo valor es diferente
     if (updateUserDto.dni && updateUserDto.dni !== user.dni) {
       // Verifica si ya existe un usuario con el mismo nuevo dni
@@ -412,7 +408,6 @@ export class UsersService {
         );
       }
     }
-
     // Verificar la contraseña antigua
     if (updateUserDto.oldPassword && !bcrypt.compareSync(updateUserDto.oldPassword, user.password)) { //
       console.error('Error: La contraseña antigua proporcionada no es válida');
@@ -425,19 +420,15 @@ export class UsersService {
       );
     }
 
-
     if (updateUserDto.password) {
       updateUserDto.password = bcrypt.hashSync(updateUserDto.password, 10);
     }
-
-
-
     // Si no hay duplicados en ninguno de los campos editados, procede con la actualización
     const updatedUser = await this.userRepository.preload({
       id: updateUserDto.id,
       ...updateUserDto,
     });
-    
+
     if (updateUserDto.dateTo) {
       const newUserStatus = new UserStatus();
       newUserStatus.statusRegistrationDateTime = this.formatDate(new Date());
@@ -445,29 +436,87 @@ export class UsersService {
       newUserStatus.userStatusType = await this.validateTypeUserStatusLicencia();
       newUserStatus.user = updatedUser;
       await this.entityManager.save(UserStatus, newUserStatus);
-    } 
+    }
 
     let newPass = null
     if (updateUserDto?.password) {
       newPass = bcrypt.hashSync(updateUserDto.password, 10)
       updatedUser.password = newPass;
     }
-    if((updateUserDto.roles.includes('supplier')) && (!user.roles.includes('supplier'))){
+
+    if ((updateUserDto.roles.includes('supplier')) && (!user.roles.includes('supplier'))) {
       const newProfileUser = new ProfileUser();
-      newProfileUser.profile = await this.codeProfileSupplier()
-      newProfileUser.user = updatedUser
-      await this.entityManager.save(ProfileUser, newProfileUser);
-    } else if ((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))){
-      const newProfileUser = new ProfileUser();
-      newProfileUser.profile = await this.codeProfileClient()
-      newProfileUser.user = updatedUser
-      await this.entityManager.save(ProfileUser, newProfileUser);
-    } else if((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))){
-      const newProfileUser = new ProfileUser();
-      newProfileUser.profile = await this.codeProfileAdmin()
-      newProfileUser.user = updatedUser
-      await this.entityManager.save(ProfileUser, newProfileUser);
+      newProfileUser.profile = await this.codeProfileSupplier();
+      newProfileUser.user = updatedUser;
+      updatedUser.profileUser.push(newProfileUser);
+    } else if ((!updateUserDto.roles.includes('supplier')) && (user.roles.includes('supplier'))) {
+      const profile = await this.codeProfileSupplier();
+      // Buscar el ProfileUser asociado al perfil y al usuario
+      const profileUserToDelete = await this.profileUserRepository
+        .createQueryBuilder('profileUser')
+        .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
+        .andWhere('profileUser.user = :userId', { userId: updatedUser.id }) // Utiliza solo el valor id del usuario como parámetro
+        .getOne();
+      // Si se encuentra el ProfileUser, eliminarlo
+      if (profileUserToDelete) {
+        await this.profileUserRepository
+          .createQueryBuilder()
+          .delete()
+          .from(ProfileUser)
+          .where('id = :id', { id: profileUserToDelete.id })
+          .execute();
+      }
     }
+
+    if ((updateUserDto.roles.includes('client')) && (!user.roles.includes('client'))) {
+      const newProfileUser = new ProfileUser();
+      newProfileUser.profile = await this.codeProfileClient();
+      newProfileUser.user = updatedUser; // Asignar el usuario actualizado aquí
+      updatedUser.profileUser.push(newProfileUser); // Asignar el nuevo ProfileUser al usuario
+    } else if ((!updateUserDto.roles.includes('client')) && (user.roles.includes('client'))) {
+      const profile = await this.codeProfileClient();
+      // Buscar el ProfileUser asociado al perfil y al usuario
+      const profileUserToDelete = await this.profileUserRepository
+        .createQueryBuilder('profileUser')
+        .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
+        .andWhere('profileUser.user = :userId', { userId: updatedUser.id }) // Utiliza solo el valor id del usuario como parámetro
+        .getOne();
+
+      // Si se encuentra el ProfileUser, eliminarlo
+      if (profileUserToDelete) {
+        await this.profileUserRepository
+          .createQueryBuilder()
+          .delete()
+          .from(ProfileUser)
+          .where('id = :id', { id: profileUserToDelete.id })
+          .execute();
+      }
+
+      if ((updateUserDto.roles.includes('admin')) && (!user.roles.includes('admin'))) {
+        const newProfileUser = new ProfileUser();
+        newProfileUser.profile = await this.codeProfileAdmin();
+        newProfileUser.user = updatedUser; // Asignar el usuario actualizado aquí
+        updatedUser.profileUser.push(newProfileUser)// Asignar el nuevo ProfileUser al usuario
+      } else if ((!updateUserDto.roles.includes('admin')) && (user.roles.includes('admin'))) {
+        const profile = await this.codeProfileAdmin();
+        // Buscar el ProfileUser asociado al perfil y al usuario
+        const profileUserToDelete = await this.profileUserRepository
+          .createQueryBuilder('profileUser')
+          .where('profileUser.profile = :profileId', { profileId: profile.id }) // Utiliza solo el valor id del perfil como parámetro
+          .andWhere('profileUser.user = :userId', { userId: updatedUser.id }) // Utiliza solo el valor id del usuario como parámetro
+          .getOne();
+
+        if (profileUserToDelete) {
+          await this.profileUserRepository
+            .createQueryBuilder()
+            .delete()
+            .from(ProfileUser)
+            .where('id = :id', { id: profileUserToDelete.id })
+            .execute();
+        }
+      }
+    }
+
     let userResult: any;
     await this.entityManager.transaction(async (transaction) => {
       try {
@@ -478,7 +527,7 @@ export class UsersService {
         throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     });
-
+    delete userResult.profileUser;
     return {
       status: HttpStatus.OK,
       data: userResult,
@@ -487,7 +536,7 @@ export class UsersService {
 
   async updateStatus(id: number) {
     console.log(id);
-    
+
     const userFound = await this.userRepository.findOne({ where: { id: id } })
 
     const newUserStatus = new UserStatus();
@@ -504,7 +553,7 @@ export class UsersService {
           throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
         }
       });
-    } catch (error){
+    } catch (error) {
       console.log(error);
       throw new DbException(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
